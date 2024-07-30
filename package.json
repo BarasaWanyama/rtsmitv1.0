@@ -13,6 +13,7 @@
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "mongodb": "^6.8.0",
+    "mongoose": "^8.5.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "react": "^18.3.1",
@@ -23,10 +24,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-  "start": "PORT=3000 react-scripts start",
-  "server": "node server/server.js",
-  "dev": "concurrently \"npm start\" \"npm run server\""
-},
+    "start": "PORT=3000 react-scripts start",
+    "server": "node server/server.js",
+    "dev": "concurrently \"npm start\" \"npm run server\""
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

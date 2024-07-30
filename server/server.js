@@ -156,7 +156,12 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => console.log('MongoDB database connection established successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  console.error('Error name:', err.name);
+  console.error('Error code:', err.code);
+  if (err.reason) console.error('Error reason:', err.reason);
+});
 
 // Serve React app for any unmatched routes, enabling client-side routing
 app.get('*', (req, res) => {
