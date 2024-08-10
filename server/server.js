@@ -1,4 +1,5 @@
 // Import required modules and configure environment variables
+const { cacheMiddleware, clearCache, populateCache } = require('./cacheMiddleware');
 const path = require('path');
 const axios = require('axios');
 const express = require('express');
@@ -96,15 +97,18 @@ app.get('/', (req, res) => {
   res.send('Welcome to the API');
 });
 
+// Call populateCache when the server starts
+populateCache();
+
 const itemsRouter = require('./routes/items');
 const socialMediaPostsRouter = require('./routes/socialMediaPosts');
 
 // Use isAuthenticated middleware for protected routes
-app.use('/api/items', isAuthenticated, itemsRouter);
-app.use('/api/social-media-posts', isAuthenticated, socialMediaPostsRouter);
+app.use('/api/items', isAuthenticated, cacheMiddleware(300), itemsRouter);
+app.use('/api/social-media-posts', isAuthenticated, cacheMiddleware(300), socialMediaPostsRouter);
 
 // Social Media Data Aggregation Route
-app.get('/api/social-media-data', isAuthenticated, async (req, res) => {
+app.get('/api/social-media-data', isAuthenticated, cacheMiddleware(300), async (req, res) => {
   try {
     // Function to fetch data from a social media API
     const fetchSocialMediaData = async (url, params) => {
