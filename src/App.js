@@ -108,6 +108,14 @@ function App() {
       const data = await apiClient.getSocialMediaData();
       console.log('Social media data received:', data);
       setSocialMediaData(data);
+      // Check if data is an array, if not, try to extract it
+      let postsArray = Array.isArray(data) ? data : data.posts || [];
+    
+      if (!Array.isArray(postsArray)) {
+        console.error('Received data is not in the expected format:', data);
+        postsArray = [];
+      }
+      setSocialMediaData(postsArray);
       
       if (model) {
         const sentiments = await Promise.all(
