@@ -88,6 +88,7 @@ app.get('/auth/user', (req, res) => {
 app.post('/auth/logout', (req, res) => {
   req.logout((err) => {
     if (err) {
+      console.error('Logout error:', err);
       return res.status(500).json({ error: 'Error logging out' });
     }
     req.session.destroy((err) => {

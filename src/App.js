@@ -23,13 +23,20 @@ function ErrorFallback({error}) {
 const apiClient = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {options, credentials: 'include'});
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        ...options.headers,
+        'Content-Type': 'application/json'
+      }
+    });
     if (!response.ok) {
-      // Throw an error if the response is not successful
       throw new Error(`API request failed: ${response.statusText}`);
     }
     return response.json();
   },
+  
   // Method to get all items
   getAllItems: () => apiClient.request('/items'),
   // Method to get a single item by ID
@@ -107,19 +114,19 @@ function App() {
     try {
       const data = await apiClient.getSocialMediaData();
       console.log('Social media data received:', data);
-      setSocialMediaData(data);
+      
       // Check if data is an array, if not, try to extract it
       let postsArray = Array.isArray(data) ? data : data.posts || [];
-    
+      
       if (!Array.isArray(postsArray)) {
         console.error('Received data is not in the expected format:', data);
         postsArray = [];
       }
       setSocialMediaData(postsArray);
       
-      if (model) {
+      if (model && postsArray.length > 0) {
         const sentiments = await Promise.all(
-          data.map(async (post) => ({
+          postsArray.map(async (post) => ({
             ...post,
             sentiment: await analyzeSentiment(post.text)
           }))
@@ -247,20 +254,24 @@ function App() {
   // Function to handle logout
   const handleLogout = async () => {
     try {
-      const response = await apiClient.request('/auth/logout', { method: 'POST' });
+      const response = await apiClient.request('/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      });
+      console.log('Logout response:', response);
       if (response.message === 'Logged out successfully') {
         setUser(null);
-        // Clear any client-side storage if you're using any
+        // Clear any client-side storage
         localStorage.removeItem('user');
-        // Redirect to login page
+        // Force a page reload to clear any remaining state
         window.location.href = '/login';
       } else {
         console.error('Logout failed:', response);
-        
+        setError('Logout failed. Please try again.');
       }
     } catch (error) {
       console.error('Error logging out:', error);
-    
+      setError('Error logging out. Please try again.');
     }
   };
   
