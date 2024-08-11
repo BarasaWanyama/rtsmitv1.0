@@ -48,6 +48,7 @@ const apiClient = {
   }),
   // Method to delete an item
   deleteItem: (id) => apiClient.request(`/items/${id}`, { method: 'DELETE' }),
+  getSocialMediaData: () => apiClient.request('/api/social-media-posts'),
 };
 
 // App component: Manages state for various functions 
