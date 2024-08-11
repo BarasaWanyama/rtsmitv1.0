@@ -56,4 +56,4 @@ const populateCache = () => {
   cache.set('social_media_data', syntheticData, 3600); // Cache for 1 hour
   console.log('Cache populated with synthetic data');
 };
-module.exports = { cacheMiddleware, cache, clearCache };
+module.exports = { cacheMiddleware, cache, populateCache, clearCache };
