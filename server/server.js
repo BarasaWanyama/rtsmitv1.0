@@ -90,7 +90,13 @@ app.post('/auth/logout', (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Error logging out' });
     }
-    res.json({ message: 'Logged out successfully' });
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+      }
+      res.clearCookie('connect.sid'); // Clear the session cookie
+      res.json({ message: 'Logged out successfully' });
+    });
   });
 });
 

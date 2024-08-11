@@ -247,10 +247,20 @@ function App() {
   // Function to handle logout
   const handleLogout = async () => {
     try {
-      await apiClient.request('/auth/logout', { method: 'POST' });
-      setUser(null);
+      const response = await apiClient.request('/auth/logout', { method: 'POST' });
+      if (response.message === 'Logged out successfully') {
+        setUser(null);
+        // Clear any client-side storage if you're using any
+        localStorage.removeItem('user');
+        // Redirect to login page
+        window.location.href = '/login';
+      } else {
+        console.error('Logout failed:', response);
+        
+      }
     } catch (error) {
       console.error('Error logging out:', error);
+    
     }
   };
   
