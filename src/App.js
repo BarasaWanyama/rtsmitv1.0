@@ -5,11 +5,9 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import * as tf from '@tensorflow/tfjs';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
 import Dashboard from './components/Dashboard';
-import SocialMediaAPI from './services/SocialMediaAPI';
 import AlertsNotifications from './components/AlertsNotifications';
 import Login from './components/Login';
 import './App.css';
-
 const API_BASE_URL = 'http://localhost:5000';
 
 function ErrorFallback({error}) {
@@ -25,7 +23,7 @@ function ErrorFallback({error}) {
 const apiClient = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, options);
+    const response = await fetch(url, {options, credentials: 'include'});
     if (!response.ok) {
       // Throw an error if the response is not successful
       throw new Error(`API request failed: ${response.statusText}`);
@@ -106,19 +104,16 @@ function App() {
     console.log('Fetching social media data...');
     setLoading(true);
     try {
-      const data = await SocialMediaAPI.getData();
+      const data = await apiClient.getSocialMediaData();
       console.log('Social media data received:', data);
       setSocialMediaData(data);
       
       if (model) {
         const sentiments = await Promise.all(
-          data.flatMap(platform => 
-            platform.data.posts ? platform.data.posts.map(async (item) => ({
-              platform: platform.platform,
-              ...item,
-              sentiment: await analyzeSentiment(item.text)
-            })) : []
-          )
+          data.map(async (post) => ({
+            ...post,
+            sentiment: await analyzeSentiment(post.text)
+          }))
         );
         setSentimentData(sentiments);
       }
@@ -131,7 +126,7 @@ function App() {
       setLoading(false);
     }
   }, [model, analyzeSentiment]);
-
+  
   // Fetche social media data initially and set up periodic fetching every 30 seconds
   useEffect(() => {
     fetchSocialMediaData();
@@ -166,7 +161,7 @@ function App() {
   const filteredAndSortedData = useMemo(() => {
     if (!socialMediaData || !Array.isArray(socialMediaData)) return [];
   
-    let result = socialMediaData.flatMap(platform => platform.data.posts || []);
+    let result = socialMediaData;
     
     // Apply filters
     if (filters.topic !== 'All') {
@@ -229,28 +224,21 @@ function App() {
   // Function to check user authentication status
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/user`, {
-          credentials: 'include'
-        });
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Error checking authentication:', error);
+    try {
+      const userData = await apiClient.request('/auth/user');
+      setUser(userData);
+      } 
+      catch (error) {
+      console.error('Error checking authentication:', error);
       }
     };
     checkAuth();
   }, []);
 
-  // // Function to handle logout
+  // Function to handle logout
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      await apiClient.request('/auth/logout', { method: 'POST' });
       setUser(null);
     } catch (error) {
       console.error('Error logging out:', error);

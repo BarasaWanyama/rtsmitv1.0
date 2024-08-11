@@ -99,7 +99,7 @@ const Dashboard = ({
           {socialMediaData.slice(0, 5).map((post, index) => (
             <li key={index}>
               <p>{post.text}</p>
-              <p>Likes: {post.likes} | Hashtags: {post.hashtags?.length || 0} | Topic: {post.topic} | Platform: {post.platform}</p>
+              <p>Likes: {post.likes} | Hashtags: {post.hashtags?.length || 0} | Topic: {post.topic}</p>
             </li>
           ))}
         </ul>
