@@ -1,5 +1,6 @@
 // Import required modules and configure environment variables
-const { cacheMiddleware, populateCache, clearCache } = require('./cacheMiddleware');
+const { cacheMiddleware, clearCache } = require('./cacheMiddleware');
+const { populateCache } = require('./cachePopulator');
 const path = require('path');
 const axios = require('axios');
 const express = require('express');

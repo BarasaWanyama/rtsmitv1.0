@@ -1,11 +1,6 @@
 // cachePopulator.js
-const { cache } = require('./cacheMiddleware');
-const NodeCache = require('node-cache');
+const cache = require('./cache');
 
-// Create a new cache instance (or import the one from cacheMiddleware.js)
-const cache = new NodeCache({ stdTTL: 300 });
-
-// Function to generate synthetic data for each platform
 const generateSyntheticData = (platform) => {
   const posts = Array.from({ length: 10 }, (_, i) => ({
     id: `${platform.toLowerCase()}_post_${i + 1}`,
@@ -26,13 +21,12 @@ const generateSyntheticData = (platform) => {
   };
 };
 
-// Function to populate the cache with synthetic data
 const populateCache = () => {
+  console.log('Populating cache with synthetic data...');
   const platforms = ['Facebook', 'LinkedIn', 'Platform X'];
   const syntheticData = platforms.map(generateSyntheticData);
-
   cache.set('social_media_data', syntheticData, 3600); // Cache for 1 hour
   console.log('Cache populated with synthetic data');
 };
 
-module.exports = { cache, populateCache };
+module.exports = { populateCache };
