@@ -36,7 +36,7 @@ const apiClient = {
     }
     return response.json();
   },
-  
+
   // Method to get all items
   getAllItems: () => apiClient.request('/items'),
   // Method to get a single item by ID
@@ -55,7 +55,29 @@ const apiClient = {
   }),
   // Method to delete an item
   deleteItem: (id) => apiClient.request(`/items/${id}`, { method: 'DELETE' }),
-  getSocialMediaData: () => apiClient.request('/api/social-media-posts'),
+  
+  // Implement caching for social media data
+  getSocialMediaData: async () => {
+    const cachedData = localStorage.getItem('socialMediaData');
+    const cachedTime = localStorage.getItem('socialMediaDataTime');
+    const currentTime = Date.now();
+
+    if (cachedData && cachedTime && currentTime - parseInt(cachedTime) < 60000) {
+      console.log('Using cached social media data');
+      return JSON.parse(cachedData);
+    }
+
+    console.log('Fetching fresh social media data from API');
+    try {
+      const data = await apiClient.request('/api/social-media-posts');
+      localStorage.setItem('socialMediaData', JSON.stringify(data));
+      localStorage.setItem('socialMediaDataTime', currentTime.toString());
+      return data;
+    } catch (error) {
+      console.error('Error fetching social media data:', error);
+      throw error; // Re-throw the error to be handled by the caller
+    }
+  },
 };
 
 // App component: Manages state for various functions 
@@ -123,7 +145,7 @@ function App() {
         postsArray = [];
       }
       setSocialMediaData(postsArray);
-      
+      console.log('Social media data set:', postsArray);
       if (model && postsArray.length > 0) {
         const sentiments = await Promise.all(
           postsArray.map(async (post) => ({
@@ -133,23 +155,22 @@ function App() {
         );
         setSentimentData(sentiments);
       }
-  
       setError(null);
     } catch (error) {
       console.error('Error fetching data or analyzing sentiment:', error);
       setError('Error fetching data or analyzing sentiment. Please try again.');
+      setSocialMediaData([]);  // Set to empty array on error
     } finally {
       setLoading(false);
     }
   }, [model, analyzeSentiment]);
   
-  // Fetche social media data initially and set up periodic fetching every 30 seconds
+  // Fetch social media data initially and set up periodic fetching every 30 seconds
   useEffect(() => {
     fetchSocialMediaData();
     const intervalId = setInterval(fetchSocialMediaData, 30000);
     return () => clearInterval(intervalId);
   }, [fetchSocialMediaData]);
-
   // Example usage of API functions
   useEffect(() => {
     const fetchData = async () => {

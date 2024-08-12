@@ -116,14 +116,16 @@ app.use('/api/items', isAuthenticated, cacheMiddleware(300), itemsRouter);
 app.use('/api/social-media-posts', isAuthenticated, cacheMiddleware(300), socialMediaPostsRouter);
 
 // Social Media Data Aggregation Route
-app.get('/api/social-media-data', isAuthenticated, cacheMiddleware(300), async (req, res) => {
+app.get('/api/social-media-posts', isAuthenticated, cacheMiddleware(300), async (req, res) => {
   try {
-    // Function to fetch data from a social media API
-    const fetchSocialMediaData = async (url, params) => {
-      const response = await axios.get(url, { params });
-      return response.data;
-    };
-
+    // Check if the connection is ready
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database not connected');
+    }
+    
+    const posts = await SocialMediaPost.find().lean().exec();
+    res.json(posts);
+  
     // Fetch data from each platform
     const facebookData = await fetchSocialMediaData(process.env.FACEBOOK_API_URL, {
       access_token: process.env.FACEBOOK_API_KEY
@@ -166,6 +168,7 @@ app.get('/api/social-media-data', isAuthenticated, cacheMiddleware(300), async (
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s
 })
 .then(() => console.log('MongoDB database connection established successfully'))
 .catch(err => {
@@ -173,6 +176,13 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.error('Error name:', err.name);
   console.error('Error code:', err.code);
   if (err.reason) console.error('Error reason:', err.reason);
+  // Optionally, you might want to exit the process here if the DB connection is critical
+  // process.exit(1);
+});
+
+// Handle errors after initial connection
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
 });
 
 // Serve React app for any unmatched routes, enabling client-side routing

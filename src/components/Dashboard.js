@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import './Dashboard.css';
 import TopicPieChart from './TopicPieChart';
 
@@ -10,6 +10,16 @@ const Dashboard = ({
   onFilterChange,
   onSortChange
 }) => {
+  // Log changes to Dashboard props for debugging
+  useEffect(() => {
+    console.log('Dashboard props updated:', {
+      socialMediaData,
+      sentimentData,
+      filters,
+      sortBy
+    });
+  }, [socialMediaData, sentimentData, filters, sortBy]);
+
   // Calculate metrics based on the new data structure
   const totalPosts = socialMediaData.length;
   const totalLikes = socialMediaData.reduce((sum, post) => sum + (post.likes || 0), 0);
