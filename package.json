@@ -5,8 +5,6 @@
   "proxy": "http://localhost:5000/",
   "dependencies": {
     "@tensorflow/tfjs": "^4.20.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
@@ -50,7 +48,11 @@
     ]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "concurrently": "^8.2.2",
+    "jest": "^27.5.1",
+    "supertest": "^7.0.0"
   },
   "jest": {
     "testMatch": [
