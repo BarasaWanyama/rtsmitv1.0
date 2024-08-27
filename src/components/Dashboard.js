@@ -1,8 +1,10 @@
-import React, {useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
-import TopicPieChart from './TopicPieChart';
+import { TopicPieChart } from './TopicPieChart';
+import Header from './Header';
+import Sidebar from './Sidebar';
 
-const Dashboard = ({
+export const Dashboard = ({
   socialMediaData,
   sentimentData,
   filters,
@@ -10,6 +12,21 @@ const Dashboard = ({
   onFilterChange,
   onSortChange
 }) => {
+  console.log('Dashboard component loaded');
+  const [currentSection, setCurrentSection] = useState('Overview');
+
+  // Calculate metrics based on the data structure
+  const totalPosts = socialMediaData.length;
+  const totalLikes = socialMediaData.reduce((sum, post) => sum + (post.likes || 0), 0);
+  const totalHashtags = socialMediaData.reduce((sum, post) => sum + (post.hashtags?.length || 0), 0);
+  const avgLikes = totalPosts > 0 ? totalLikes / totalPosts : 0;
+
+  // Calculate topic counts
+  const topicCounts = socialMediaData.reduce((counts, post) => {
+    counts[post.topic] = (counts[post.topic] || 0) + 1;
+    return counts;
+  }, {});
+
   // Log changes to Dashboard props for debugging
   useEffect(() => {
     console.log('Dashboard props updated:', {
@@ -20,20 +37,20 @@ const Dashboard = ({
     });
   }, [socialMediaData, sentimentData, filters, sortBy]);
 
-  // Calculate metrics based on the new data structure
-  const totalPosts = socialMediaData.length;
-  const totalLikes = socialMediaData.reduce((sum, post) => sum + (post.likes || 0), 0);
-  const totalHashtags = socialMediaData.reduce((sum, post) => sum + (post.hashtags?.length || 0), 0);
-
-  // Calculate topic counts
-  const topicCounts = socialMediaData.reduce((counts, post) => {
-    counts[post.topic] = (counts[post.topic] || 0) + 1;
-    return counts;
-  }, {});
+  const renderSection = () => {
+    // Implement this function based on your requirements
+    return <div>Content for {currentSection}</div>;
+  };
 
   return (
-    <div className="dashboard">
-      <h2>Social Media Dashboard</h2>
+    <div className="dashboard-container">
+      <Header totalPosts={totalPosts} avgLikes={avgLikes.toFixed(2)} />
+      <div className="dashboard-content">
+        <Sidebar onSectionChange={setCurrentSection} currentSection={currentSection} />
+        <main className="dashboard-main">
+          {renderSection()}
+        </main>
+      </div>
       <div className="dashboard-controls">
         <div className="filter-control">
           <label htmlFor="topic-filter">Filter by Topic:</label>
@@ -71,28 +88,6 @@ const Dashboard = ({
           </select>
         </div>
       </div>
-      <div className="metrics">
-        <div className="metric">
-          <h3>Total Posts</h3>
-          <p>{totalPosts}</p>
-        </div>
-        <div className="metric">
-          <h3>Total Likes</h3>
-          <p>{totalLikes}</p>
-        </div>
-        <div className="metric">
-          <h3>Total Hashtags</h3>
-          <p>{totalHashtags}</p>
-        </div>
-      </div>
-      <div className="topic-distribution">
-        <h3>Posts by Topic</h3>
-        <ul>
-          {Object.entries(topicCounts).map(([topic, count]) => (
-            <li key={topic}>{topic}: {count}</li>
-          ))}
-        </ul>
-      </div>
       <div className="sentiment-analysis">
         <h3>Sentiment Analysis</h3>
         {sentimentData && (
@@ -102,21 +97,6 @@ const Dashboard = ({
             <li>Negative: {sentimentData.filter(item => item.sentiment.label === 'Negative').length}</li>
           </ul>
         )}
-      </div>
-      <div className="recent-posts">
-        <h3>Recent Posts</h3>
-        <ul>
-          {socialMediaData.slice(0, 5).map((post, index) => (
-            <li key={index}>
-              <p>{post.text}</p>
-              <p>Likes: {post.likes} | Hashtags: {post.hashtags?.length || 0} | Topic: {post.topic}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="topic-distribution">
-        <h3>Posts by Topic</h3>
-        <TopicPieChart topicCounts={topicCounts} />
       </div>
     </div>
   );

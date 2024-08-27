@@ -4,7 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import * as tf from '@tensorflow/tfjs';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
-import Dashboard from './components/Dashboard';
+import { Dashboard } from './components/Dashboard';
 import AlertsNotifications from './components/AlertsNotifications';
 import Login from './components/Login';
 import './App.css';
@@ -18,7 +18,6 @@ function ErrorFallback({error}) {
     </div>
   )
 }
-
 // API client object for making requests to a RESTful API
 const apiClient = {
   async request(endpoint, options = {}) {
@@ -36,7 +35,6 @@ const apiClient = {
     }
     return response.json();
   },
-
   // Method to get all items
   getAllItems: () => apiClient.request('/items'),
   // Method to get a single item by ID
@@ -198,27 +196,21 @@ function App() {
   const filteredAndSortedData = useMemo(() => {
     if (!socialMediaData || !Array.isArray(socialMediaData)) return [];
   
-    let result = socialMediaData;
-    
-    // Apply filters
-    if (filters.topic !== 'All') {
-      result = result.filter(post => post.topic === filters.topic);
-    }
-    
-    if (filters.dateRange === '7days') {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      result = result.filter(post => new Date(post.date) >= sevenDaysAgo);
-    }
-    
-    // Apply sorting
-    result.sort((a, b) => {
-      if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
-      if (sortBy === 'likes') return b.likes - a.likes;
-      return 0;
-    });
-    
-    return result;
-  }, [socialMediaData, filters, sortBy]);
+    const sevenDaysAgo = filters.dateRange === '7days' 
+      ? Date.now() - 7 * 24 * 60 * 60 * 1000 
+      : null;
+  
+    return [...socialMediaData]
+      .filter(post => 
+        (filters.topic === 'All' || post.topic === filters.topic) &&
+        (!sevenDaysAgo || new Date(post.date).getTime() >= sevenDaysAgo)
+      )
+      .sort((a, b) => {
+        if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
+        if (sortBy === 'likes') return b.likes - a.likes;
+        return 0;
+      });
+  }, [socialMediaData, filters.topic, filters.dateRange, sortBy]);
 
   // Update filters by merging new filter values with existing ones
   const handleFilterChange = (newFilters) => {
