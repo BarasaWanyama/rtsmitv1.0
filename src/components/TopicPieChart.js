@@ -7,10 +7,13 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export const TopicPieChart = ({ topicCounts }) => {
   console.log('TopicPieChart rendering with topicCounts:',topicCounts);
-  const data = useMemo(() => 
-    Object.entries(topicCounts).map(([name, value]) => ({ name, value })),
-    [topicCounts]
-  );
+  
+  const data = useMemo(() => {
+    if (!topicCounts || typeof topicCounts !== 'object') {
+      console.error('topicCounts is null, undefined, or not an object');
+      return [];
+    }
+  }, [topicCounts]);
   if (Object.keys(topicCounts).length === 0) {
     return <div>No data available for the pie chart</div>;
   }

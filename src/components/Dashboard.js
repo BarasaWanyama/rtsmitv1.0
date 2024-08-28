@@ -22,11 +22,18 @@ export const Dashboard = ({
   const avgLikes = totalPosts > 0 ? totalLikes / totalPosts : 0;
 
   // Calculate topic counts
-  const topicCounts = socialMediaData.reduce((counts, post) => {
-    counts[post.topic] = (counts[post.topic] || 0) + 1;
-    return counts;
-  }, {});
-
+  const topicCounts = React.useMemo(() => {
+    if (!socialMediaData || !Array.isArray(socialMediaData)) {
+      console.log('socialMediaData is not an array or is undefined');
+      return {};
+    }
+    return socialMediaData.reduce((counts, post) => {
+      if (post && post.topic) {
+        counts[post.topic] = (counts[post.topic] || 0) + 1;
+      }
+      return counts;
+    }, {});
+  }, [socialMediaData]);
   // Log changes to Dashboard props for debugging
   useEffect(() => {
     console.log('Dashboard props updated:', {
@@ -38,9 +45,75 @@ export const Dashboard = ({
   }, [socialMediaData, sentimentData, filters, sortBy]);
 
   const renderSection = () => {
-    // Implement this function based on your requirements
-    return <div>Content for {currentSection}</div>;
-  };
+    switch (currentSection) {
+      case 'Overview':
+  return (
+    <div className="overview-section">
+      <h2>Overview</h2>
+      <div className="metrics-grid">
+              <div className="metric-card">
+                <h3>Total Posts</h3>
+                <p>{totalPosts}</p>
+                </div>
+                <div className="metric-card">
+                  <h3>Total Likes</h3>
+                  <p>{totalLikes}</p>
+                </div>
+                <div className="metric-card">
+                  <h3>Average Likes</h3>
+                  <p>{avgLikes.toFixed(2)}</p>
+                </div>
+                <div className="metric-card">
+                  <h3>Total Hashtags</h3>
+                  <p>{totalHashtags}</p>
+                </div>
+              </div>
+              <TopicPieChart topicCounts={topicCounts} />
+            </div>
+          );
+        case 'Posts':
+          return (
+            <div className="posts-section">
+              <h2>Recent Posts</h2>
+              <ul className="post-list">
+                {socialMediaData.slice(0, 10).map((post, index) => (
+                  <li key={index} className="post-item">
+                    <h3>{post.title}</h3>
+                    <p>{post.content}</p>
+                    <div className="post-meta">
+                      <span>Likes: {post.likes}</span>
+                      <span>Topic: {post.topic}</span>
+                      <span>Date: {new Date(post.date).toLocaleDateString()}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        case 'Sentiment':
+          return (
+            <div className="sentiment-section">
+              <h2>Sentiment Analysis</h2>
+              {sentimentData && (
+                <div className="sentiment-chart">
+                  <div className="sentiment-bar positive" style={{width: `${(sentimentData.filter(item => item.sentiment.label === 'Positive').length / sentimentData.length) * 100}%`}}>
+                    Positive: {sentimentData.filter(item => item.sentiment.label === 'Positive').length}
+                  </div>
+                  <div className="sentiment-bar neutral" style={{width: `${(sentimentData.filter(item => item.sentiment.label === 'Neutral').length / sentimentData.length) * 100}%`}}>
+                    Neutral: {sentimentData.filter(item => item.sentiment.label === 'Neutral').length}
+                  </div>
+                  <div className="sentiment-bar negative" style={{width: `${(sentimentData.filter(item => item.sentiment.label === 'Negative').length / sentimentData.length) * 100}%`}}>
+                    Negative: {sentimentData.filter(item => item.sentiment.label === 'Negative').length}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        
+        default:
+          return <div>Select a section to view content</div>;
+      }
+    };
 
   return (
     <div className="dashboard-container">
