@@ -78,6 +78,25 @@ const apiClient = {
   },
 };
 
+//Function to Filter and sort social media posts based on user-defined criteria
+export const getFilteredAndSortedData = (socialMediaData, filters, sortBy) => {
+    if (!socialMediaData || !Array.isArray(socialMediaData)) return [];
+  
+    const sevenDaysAgo = filters.dateRange === '7days' 
+      ? Date.now() - 7 * 24 * 60 * 60 * 1000 
+      : null;
+  
+    return [...socialMediaData]
+      .filter(post => 
+        (filters.topic === 'All' || post.topic === filters.topic) &&
+        (!sevenDaysAgo || new Date(post.date).getTime() >= sevenDaysAgo)
+      )
+      .sort((a, b) => {
+        if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
+        if (sortBy === 'likes') return b.likes - a.likes;
+        return 0;
+      });
+  };
 // App component: Manages state for various functions 
 function App() {
   const [socialMediaData, setSocialMediaData] = useState({});
@@ -191,26 +210,12 @@ function App() {
 
     fetchData();
   }, []);
-
-  //Filter and sort social media posts based on user-defined criteria
-  const filteredAndSortedData = useMemo(() => {
-    if (!socialMediaData || !Array.isArray(socialMediaData)) return [];
   
-    const sevenDaysAgo = filters.dateRange === '7days' 
-      ? Date.now() - 7 * 24 * 60 * 60 * 1000 
-      : null;
-  
-    return [...socialMediaData]
-      .filter(post => 
-        (filters.topic === 'All' || post.topic === filters.topic) &&
-        (!sevenDaysAgo || new Date(post.date).getTime() >= sevenDaysAgo)
-      )
-      .sort((a, b) => {
-        if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
-        if (sortBy === 'likes') return b.likes - a.likes;
-        return 0;
-      });
-  }, [socialMediaData, filters.topic, filters.dateRange, sortBy]);
+  //Filter and sort socialmedia data
+  const filteredAndSortedData = useMemo(() => 
+    getFilteredAndSortedData(socialMediaData, filters, sortBy),
+    [socialMediaData, filters, sortBy]
+  );
 
   // Update filters by merging new filter values with existing ones
   const handleFilterChange = (newFilters) => {
