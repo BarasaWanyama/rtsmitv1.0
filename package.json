@@ -55,14 +55,22 @@
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "concurrently": "^8.2.2",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^27.5.1",
     "mongodb-memory-server": "^10.0.0",
     "supertest": "^7.0.0"
   },
   "jest": {
+    "testEnvironment": "jsdom",
     "testMatch": [
       "**/__tests__/**/*.js",
       "**/?(*.)+(spec|test).js"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setupTests.js"
     ]
   }
 }
