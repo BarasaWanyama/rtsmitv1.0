@@ -4,15 +4,46 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
-import { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout } from './App.js';
+import { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App.js';
 import * as tf from '@tensorflow/tfjs';
+import dotenv from 'dotenv';
+
+// Load the environment variables
+dotenv.config();
+
+// access the API_BASE_URL:
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+// check if API_BASE_URL is set:
+if (!API_BASE_URL) {
+  throw new Error('REACT_APP_API_BASE_URL is not set in the environment');
+}
+
+// Mock fetch globally
+global.fetch = jest.fn();
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn(key => store[key]),
+    setItem: jest.fn((key, value) => {
+      store[key] = value.toString();
+    }),
+    clear: () => {
+      store = {};
+    }
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 
-// Mock the API client
-jest.mock('./apiClient', () => ({
-  request: jest.fn(),
-  getSocialMediaData: jest.fn(),
-}));
+beforeEach(() => {
+  fetch.mockClear();
+  localStorage.clear();
+  jest.clearAllMocks();
+});
+
 
 // Mock the TensorFlow.js and USE model
 jest.mock('@tensorflow/tfjs', () => ({
@@ -246,6 +277,7 @@ describe('fetchSocialMediaData function', () => {
 
     expect(mockSetError).toHaveBeenCalledWith('Error fetching data or analyzing sentiment. Please try again.');
     expect(mockSetSocialMediaData).toHaveBeenCalledWith([]);
+    expect(mockSetSentimentData).not.toHaveBeenCalled();
     expect(mockSetLoading).toHaveBeenCalledWith(false);
   });
 
@@ -266,6 +298,39 @@ describe('fetchSocialMediaData function', () => {
     expect(mockSetSocialMediaData).toHaveBeenCalledWith(mockData);
     expect(mockAnalyzeSentiment).not.toHaveBeenCalled();
     expect(mockSetSentimentData).not.toHaveBeenCalled();
+    expect(mockSetLoading).toHaveBeenCalledWith(false);
+  });
+  test('should handle partial failure in sentiment analysis', async () => {
+    const mockData = [
+      { id: 1, text: 'Great post!' },
+      { id: 2, text: 'Terrible experience.' },
+      { id: 3, text: 'Neutral statement.' }
+    ];
+    mockApiClient.getSocialMediaData.mockResolvedValue(mockData);
+    mockAnalyzeSentiment
+      .mockResolvedValueOnce({ score: 0.8, label: 'Positive' })
+      .mockRejectedValueOnce(new Error('Analysis failed'))
+      .mockResolvedValueOnce({ score: 0, label: 'Neutral' });
+
+    await fetchSocialMediaData(
+      mockApiClient,
+      mockModel,
+      mockAnalyzeSentiment,
+      mockSetSocialMediaData,
+      mockSetSentimentData,
+      mockSetError,
+      mockSetLoading
+    );
+
+    expect(mockSetSocialMediaData).toHaveBeenCalledWith(mockData);
+    expect(mockAnalyzeSentiment).toHaveBeenCalledTimes(3);
+    expect(mockSetSentimentData).toHaveBeenCalledWith([
+      { id: 1, text: 'Great post!', sentiment: { score: 0.8, label: 'Positive' } },
+      { id: 2, text: 'Terrible experience.', sentiment: null },
+      { id: 3, text: 'Neutral statement.', sentiment: { score: 0, label: 'Neutral' } }
+    ]);
+    expect(mockSetError).toHaveBeenCalledWith(null);
+    expect(mockSetLoading).toHaveBeenCalledWith(false);
   });
 });
 
@@ -899,6 +964,142 @@ describe('handleLogout function', () => {
     expect(localStorage.removeItem).not.toHaveBeenCalled();
     expect(window.location.href).not.toBe('/login');
     expect(mockSetError).toHaveBeenCalledWith('Error logging out. Please try again.');
+  });
+});
+
+
+describe('apiClient', () => {
+  beforeEach(() => {
+    fetch.mockClear();
+    localStorage.clear();
+    jest.clearAllMocks();
+  });
+
+  describe('request', () => {
+    it('should make a successful request', async () => {
+      const mockResponse = { data: 'test' };
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse)
+      });
+
+      const result = await apiClient.request('/test');
+      expect(result).toEqual(mockResponse);
+      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/test`, expect.objectContaining({
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      }));
+    });
+
+    it('should throw an error for unsuccessful requests', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        statusText: 'Not Found'
+      });
+
+      await expect(apiClient.request('/test')).rejects.toThrow('API request failed: Not Found');
+    });
+  });
+
+  describe('getAllItems', () => {
+    it('should call request with correct endpoint', async () => {
+      const spy = jest.spyOn(apiClient, 'request');
+      await apiClient.getAllItems();
+      expect(spy).toHaveBeenCalledWith('/items');
+    });
+  });
+
+  describe('getItem', () => {
+    it('should call request with correct endpoint and ID', async () => {
+      const spy = jest.spyOn(apiClient, 'request');
+      await apiClient.getItem(1);
+      expect(spy).toHaveBeenCalledWith('/items/1');
+    });
+  });
+
+  describe('createItem', () => {
+    it('should call request with correct endpoint and data', async () => {
+      const spy = jest.spyOn(apiClient, 'request');
+      await apiClient.createItem('New Item');
+      expect(spy).toHaveBeenCalledWith('/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'New Item' })
+      });
+    });
+  });
+
+  describe('updateItem', () => {
+    it('should call request with correct endpoint, ID, and data', async () => {
+      const spy = jest.spyOn(apiClient, 'request');
+      await apiClient.updateItem(1, 'Updated Item');
+      expect(spy).toHaveBeenCalledWith('/items/1', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Updated Item' })
+      });
+    });
+  });
+
+  describe('deleteItem', () => {
+    it('should call request with correct endpoint and ID', async () => {
+      const spy = jest.spyOn(apiClient, 'request');
+      await apiClient.deleteItem(1);
+      expect(spy).toHaveBeenCalledWith('/items/1', { method: 'DELETE' });
+    });
+  });
+
+  describe('getSocialMediaData', () => {
+    it('should return cached data if it exists and is recent', async () => {
+      const cachedData = { posts: ['post1', 'post2'] };
+      localStorage.getItem.mockImplementation((key) => {
+        if (key === 'socialMediaData') return JSON.stringify(cachedData);
+        if (key === 'socialMediaDataTime') return (Date.now() - 30000).toString();
+      });
+
+      const result = await apiClient.getSocialMediaData();
+      expect(result).toEqual(cachedData);
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should fetch new data if cache is old', async () => {
+      const oldCachedData = { posts: ['old1', 'old2'] };
+      const newData = { posts: ['new1', 'new2'] };
+      localStorage.getItem.mockImplementation((key) => {
+        if (key === 'socialMediaData') return JSON.stringify(oldCachedData);
+        if (key === 'socialMediaDataTime') return (Date.now() - 70000).toString();
+      });
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(newData)
+      });
+
+      const result = await apiClient.getSocialMediaData();
+      expect(result).toEqual(newData);
+      expect(fetch).toHaveBeenCalled();
+      expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
+    });
+
+    it('should fetch new data if cache does not exist', async () => {
+      const newData = { posts: ['new1', 'new2'] };
+      localStorage.getItem.mockReturnValue(null);
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(newData)
+      });
+
+      const result = await apiClient.getSocialMediaData();
+      expect(result).toEqual(newData);
+      expect(fetch).toHaveBeenCalled();
+      expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
+    });
+
+    it('should throw an error if fetching fails', async () => {
+      localStorage.getItem.mockReturnValue(null);
+      fetch.mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(apiClient.getSocialMediaData()).rejects.toThrow('Network error');
+    });
   });
 });
 // Add more tests here as needed
