@@ -20,8 +20,8 @@ const ErrorFallback = ({ error }) => {
 
 const API_BASE_URL = 'http://localhost:5000';
 
-// Define API client object for making requests to a RESTful API
-const apiClient = {
+// Define and export API client object for making requests to a RESTful API
+export const apiClient = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
