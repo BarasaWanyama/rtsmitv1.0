@@ -11,7 +11,7 @@ jest.mock('mongoose');
 jest.mock('axios');
 
 // Import the app (assuming you've exported it from server.js)
-const app = require('./server');
+const app = require('../../server/server');
 
 describe('Server', () => {
   beforeAll(() => {
