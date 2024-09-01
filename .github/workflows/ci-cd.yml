@@ -1,0 +1,75 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: pivotal-robot-430212-a5
+  SERVICE_NAME: github-actions-deployer
+  REGION: us-central1
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '21.6.1'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
+
+    - name: Build React app
+      run: npm run build
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+
+    - name: Authorize Docker push
+      run: gcloud auth configure-docker
+
+    - name: Build and push Docker image
+      env:
+        IMAGE_NAME: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+      run: |
+        docker build -t $IMAGE_NAME .
+        docker push $IMAGE_NAME
+
+    - name: Deploy to Cloud Run
+      env:
+        IMAGE_NAME: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }} \
+          --image $IMAGE_NAME \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --set-env-vars "PORT=5000" \
+          --set-env-vars "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" \
+          --set-env-vars "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+          --set-env-vars "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" \
+          --set-env-vars "FACEBOOK_API_URL=${{ secrets.FACEBOOK_API_URL }}" \
+          --set-env-vars "FACEBOOK_API_KEY=${{ secrets.FACEBOOK_API_KEY }}" \
+          --set-env-vars "LINKEDIN_API_URL=${{ secrets.LINKEDIN_API_URL }}" \
+          --set-env-vars "LINKEDIN_API_KEY=${{ secrets.LINKEDIN_API_KEY }}" \
+          --set-env-vars "PLATFORM_X_API_URL=${{ secrets.PLATFORM_X_API_URL }}" \
+          --set-env-vars "PLATFORM_X_API_KEY=${{ secrets.PLATFORM_X_API_KEY }}" \
+          --set-env-vars "PLATFORM_X_API_KEY_SECRET=${{ secrets.PLATFORM_X_API_KEY_SECRET }}" \
+          --set-env-vars "PLATFORM_X_BEARER_TOKEN=${{ secrets.PLATFORM_X_BEARER_TOKEN }}" \
+          --set-env-vars "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" \
+          --set-env-vars "MONGODB_URI=${{ secrets.MONGODB_URI }}"
