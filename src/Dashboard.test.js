@@ -46,7 +46,7 @@ describe('Dashboard Component', () => {
     render(<Dashboard {...mockProps} />);
     expect(screen.getByTestId('header')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
-    expect(screen.getByText('Overview')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
   });
 
   test('displays correct metrics in overview section', () => {
@@ -66,42 +66,42 @@ describe('Dashboard Component', () => {
 
   test('changes section when sidebar buttons are clicked', () => {
     render(<Dashboard {...mockProps} />);
-    fireEvent.click(screen.getByText('Posts'));
-    expect(screen.getByText('Recent Posts')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Sentiment'));
-    expect(screen.getByText('Sentiment Analysis')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Posts' }));
+  expect(screen.getByRole('heading', { name: 'Recent Posts' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Sentiment' }));
+  expect(screen.getByRole('heading', { name: 'Sentiment Analysis' })).toBeInTheDocument();
   });
 
   test('renders correct number of posts in Posts section', () => {
     render(<Dashboard {...mockProps} />);
     fireEvent.click(screen.getByText('Posts'));
-    const postItems = screen.getAllByRole('listitem');
+    const postItems = screen.getAllByRole('listitem').filter(item => item.classList.contains('post-item'));
     expect(postItems).toHaveLength(2);
   });
 
   test('displays sentiment data correctly', () => {
     render(<Dashboard {...mockProps} />);
     fireEvent.click(screen.getByText('Sentiment'));
-    expect(screen.getByText('Positive: 1')).toBeInTheDocument();
-    expect(screen.getByText('Neutral: 1')).toBeInTheDocument();
-    expect(screen.getByText('Negative: 1')).toBeInTheDocument();
+    expect(screen.getByText(/Positive: 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Neutral: 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Negative: 1/i)).toBeInTheDocument();
   });
 
   test('calls onFilterChange when topic filter is changed', () => {
     render(<Dashboard {...mockProps} />);
-    fireEvent.change(screen.getByLabelText('Filter by Topic:'), { target: { value: 'Tech' } });
+    fireEvent.change(screen.getByRole('combobox', { name: /Filter by Topic/i }), { target: { value: 'Tech' } });
     expect(mockProps.onFilterChange).toHaveBeenCalledWith({ topic: 'Tech' });
   });
 
   test('calls onFilterChange when date filter is changed', () => {
     render(<Dashboard {...mockProps} />);
-    fireEvent.change(screen.getByLabelText('Filter by Date:'), { target: { value: 'all' } });
+    fireEvent.change(screen.getByRole('combobox', { name: /Filter by Date/i }), { target: { value: 'all' } });
     expect(mockProps.onFilterChange).toHaveBeenCalledWith({ dateRange: 'all' });
   });
 
   test('calls onSortChange when sort option is changed', () => {
     render(<Dashboard {...mockProps} />);
-    fireEvent.change(screen.getByLabelText('Sort by:'), { target: { value: 'likes' } });
+    fireEvent.change(screen.getByRole('combobox', { name: /Sort by/i }), { target: { value: 'likes' } });
     expect(mockProps.onSortChange).toHaveBeenCalledWith('likes');
   });
 });
