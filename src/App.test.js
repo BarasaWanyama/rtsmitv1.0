@@ -6,6 +6,9 @@ import App, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndS
 import * as tf from '@tensorflow/tfjs';
 import dotenv from 'dotenv';
 
+// Mock environment variables
+process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
+
 // Mock the '@tensorflow-models/universal-sentence-encoder' module
 jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
   load: jest.fn().mockResolvedValue({
@@ -1119,7 +1122,6 @@ test('renders App component', async () => {
   await waitFor(() => {
     expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
   });
-
 });
 
 // Add more tests here as needed

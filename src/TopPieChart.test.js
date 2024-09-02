@@ -19,15 +19,15 @@ jest.mock('recharts', () => ({
 }));
 
 describe('TopicPieChart Component', () => {
+  let consoleLogSpy;
   // Mock console.log and console.error to prevent cluttering the test output
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log');
+    
   });
 
   afterEach(() => {
-    console.log.mockRestore();
-    console.error.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
   test('renders no data message when topicCounts is empty', () => {
