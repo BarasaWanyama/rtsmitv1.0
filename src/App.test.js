@@ -8,6 +8,15 @@ import { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSorted
 import * as tf from '@tensorflow/tfjs';
 import dotenv from 'dotenv';
 
+// Mock the '@tensorflow-models/universal-sentence-encoder' module
+jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
+  load: jest.fn().mockResolvedValue({
+    embed: jest.fn().mockResolvedValue({
+      arraySync: jest.fn().mockReturnValue([[1, 2, 3]])
+    })
+  })
+}));
+
 // Load the environment variables
 dotenv.config();
 
@@ -18,15 +27,6 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 if (!API_BASE_URL) {
   throw new Error('REACT_APP_API_BASE_URL is not set in the environment');
 }
-
-// Mock the '@tensorflow-models/universal-sentence-encoder' module
-jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
-  load: jest.fn().mockResolvedValue({
-    embed: jest.fn().mockResolvedValue({
-      arraySync: jest.fn().mockReturnValue([[1, 2, 3]])
-    })
-  })
-}));
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -1111,5 +1111,12 @@ describe('apiClient', () => {
     });
   });
 });
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+
 // Add more tests here as needed
 });
