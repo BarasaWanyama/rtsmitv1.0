@@ -40,14 +40,23 @@ describe('AlertsNotifications', () => {
   });
 
   test('applies correct CSS classes', () => {
-    render(<AlertsNotifications alerts={mockAlerts} removeAlert={mockRemoveAlert} />);
-
-    const alertsContainer = screen.getByRole('alert').parentElement;
+    const { debug } = render(<AlertsNotifications alerts={mockAlerts} removeAlert={mockRemoveAlert} />);
+    
+    debug(); // This will print the rendered HTML to the console
+  
+    const alertsContainer = screen.getByRole('alert');
     expect(alertsContainer).toHaveClass('alerts-container');
-
+  
     mockAlerts.forEach(alert => {
-      const alertElement = screen.getByText(alert.message).closest('div');
-      expect(alertElement).toHaveClass('alert', `alert-${alert.type}`);
+      const alertElement = screen.queryByText(alert.message);
+      if (!alertElement) {
+        console.error(`Alert message not found: ${alert.message}`);
+      }
+      expect(alertElement).not.toBeNull(); // Check if the element exists
+      if (alertElement) {
+        const alertContainer = alertElement.closest('div');
+        expect(alertContainer).toHaveClass('alert', `alert-${alert.type}`);
+      }
     });
   });
 });
