@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { TopicPieChart } from '../src/components/TopicPieChart';
+import { TopicPieChart } from './components/TopicPieChart';
 
 // Mock the recharts library
 jest.mock('recharts', () => ({

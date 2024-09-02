@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Dashboard } from '../src/components/Dashboard';
+import { Dashboard } from './components/Dashboard';
 
 // Mock child components
 jest.mock('../src/components/TopicPieChart', () => ({

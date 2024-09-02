@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
-import { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from '../src/App.js';
+import { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App.js';
 import * as tf from '@tensorflow/tfjs';
 import dotenv from 'dotenv';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import AlertsNotifications from '../src/components/AlertsNotifications';
+import AlertsNotifications from './components/AlertsNotifications';
 
 describe('AlertsNotifications', () => {
   const mockAlerts = [

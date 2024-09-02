@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { SocialMediaComponent } from '../src/services/SocialMediaAPI';
-import SocialMediaAPI from '../src/services/SocialMediaAPI';
+import SocialMediaAPI from './services/SocialMediaAPI';
 
 // Mock the fetch function
 global.fetch = jest.fn();
