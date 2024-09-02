@@ -2,9 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import App from './App';
-import * as use from '@tensorflow-models/universal-sentence-encoder';
-import { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App.js';
+import App, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App';
 import * as tf from '@tensorflow/tfjs';
 import dotenv from 'dotenv';
 
@@ -96,8 +94,6 @@ describe('App Component', () => {
       expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
     });
   });
-  
-  jest.mock('@tensorflow-models/universal-sentence-encoder');
   
   describe('loadModel function', () => {
     let setModel;
@@ -1112,10 +1108,18 @@ describe('apiClient', () => {
   });
 });
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders App component', async () => {
+  render(
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  );
+  
+  // Wait for the component to load
+  await waitFor(() => {
+    expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
+  });
+
 });
 
 // Add more tests here as needed

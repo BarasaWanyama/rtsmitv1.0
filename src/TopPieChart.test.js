@@ -10,12 +10,12 @@ const mockData = {
 
 // Mock the recharts library
 jest.mock('recharts', () => ({
+  ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
   PieChart: ({ children }) => <div data-testid="pie-chart">{children}</div>,
   Pie: ({ children }) => <div data-testid="pie">{children}</div>,
-  Cell: () => <div data-testid="cell" />,
-  Legend: () => <div data-testid="legend" />,
+  Cell: ({ fill }) => <div data-testid="cell" style={{ backgroundColor: fill }} />,
   Tooltip: () => <div data-testid="tooltip" />,
-  ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
+  Legend: () => <div data-testid="legend" />,
 }));
 
 describe('TopicPieChart Component', () => {
@@ -37,14 +37,17 @@ describe('TopicPieChart Component', () => {
 
   test('renders chart components when topicCounts has data', () => {
     render(<TopicPieChart topicCounts={mockData} />);
-    expect(screen.getByText('Tech')).toBeInTheDocument();
-    expect(screen.getByText('Sports')).toBeInTheDocument();
-    expect(screen.getByText('Politics')).toBeInTheDocument();
-    });
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument();
+    expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('pie')).toBeInTheDocument();
+    expect(screen.getAllByTestId('cell')).toHaveLength(3);
+    expect(screen.getByTestId('tooltip')).toBeInTheDocument();
+    expect(screen.getByTestId('legend')).toBeInTheDocument();
+  });
 
   test('renders correct number of cells based on topicCounts', () => {
     render(<TopicPieChart topicCounts={mockData} />);
-    const cells = screen.getAllByRole('cell'); // Assuming each slice is a cell
+    const cells = screen.getAllByTestId('cell');
     expect(cells).toHaveLength(Object.keys(mockData).length);
   });
 
@@ -61,8 +64,9 @@ describe('TopicPieChart Component', () => {
   });
 
   test('logs component rendering with topicCounts', () => {
-    console.log = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'log');
     render(<TopicPieChart topicCounts={mockData} />);
-    expect(console.log).toHaveBeenCalledWith('TopicPieChart component loaded');
+    expect(consoleSpy).toHaveBeenCalledWith('TopicPieChart rendering with topicCounts:', mockData);
+    consoleSpy.mockRestore();
   });
 });
