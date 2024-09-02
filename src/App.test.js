@@ -19,6 +19,15 @@ if (!API_BASE_URL) {
   throw new Error('REACT_APP_API_BASE_URL is not set in the environment');
 }
 
+// Mock the '@tensorflow-models/universal-sentence-encoder' module
+jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
+  load: jest.fn().mockResolvedValue({
+    embed: jest.fn().mockResolvedValue({
+      arraySync: jest.fn().mockReturnValue([[1, 2, 3]])
+    })
+  })
+}));
+
 // Mock fetch globally
 global.fetch = jest.fn();
 

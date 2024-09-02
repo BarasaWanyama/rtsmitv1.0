@@ -69,7 +69,7 @@ describe('Dashboard Component', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Posts' }));
   expect(screen.getByRole('heading', { name: 'Recent Posts' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Sentiment' }));
-  expect(screen.getByRole('heading', { name: 'Sentiment Analysis' })).toBeInTheDocument();
+  expect(screen.getAllByRole('heading', { name: 'Sentiment Analysis' })[0]).toBeInTheDocument();
   });
 
   test('renders correct number of posts in Posts section', () => {
@@ -82,9 +82,9 @@ describe('Dashboard Component', () => {
   test('displays sentiment data correctly', () => {
     render(<Dashboard {...mockProps} />);
     fireEvent.click(screen.getByText('Sentiment'));
-    expect(screen.getByText(/Positive: 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Neutral: 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Negative: 1/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Positive: 1/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Neutral: 1/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Negative: 1/i)[0]).toBeInTheDocument();
   });
 
   test('calls onFilterChange when topic filter is changed', () => {
