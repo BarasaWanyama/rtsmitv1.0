@@ -2,7 +2,7 @@ import React from 'react';
 
 const AlertsNotifications = ({ alerts, removeAlert }) => {
   return (
-    <div className="alerts-container">
+    <div className="alerts-container" role="alert">
       {alerts.map(alert => (
         <div key={alert.id} className={`alert alert-${alert.type}`}>
           {alert.message}
