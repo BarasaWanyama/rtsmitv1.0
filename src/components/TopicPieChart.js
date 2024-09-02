@@ -13,8 +13,9 @@ export const TopicPieChart = ({ topicCounts }) => {
       console.error('topicCounts is null, undefined, or not an object');
       return [];
     }
+    return Object.entries(topicCounts).map(([name, value]) => ({ name, value }));
   }, [topicCounts]);
-  if (Object.keys(topicCounts).length === 0) {
+  if (!topicCounts || Object.keys(topicCounts).length === 0) {
     return <div>No data available for the pie chart</div>;
   }
   return (
