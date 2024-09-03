@@ -902,9 +902,6 @@ describe('handleLogout function', () => {
     mockSetUser = jest.fn();
     mockSetError = jest.fn();
 
-  
-
-  beforeEach(() => {
     // Mock localStorage
     localStorageMock = {
     getItem: jest.fn(),
@@ -984,20 +981,19 @@ describe('handleLogout function', () => {
 });
 
 describe('apiClient', () => {
+  
   beforeEach(() => {
     fetch.mockClear();
     localStorage.clear();
     jest.clearAllMocks();
   });
 
-describe('request', () => {
   it('should make a successful request', async () => {
     const mockResponse = { data: 'test' };
     fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(mockResponse)
     });
-
     const result = await apiClient.request('/test');
     expect(result).toEqual(mockResponse);
     expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/test`, expect.objectContaining({
@@ -1006,117 +1002,104 @@ describe('request', () => {
       }));
   });
 
-    it('should throw an error for unsuccessful requests', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Not Found'
-      });
+  it('should throw an error for unsuccessful requests', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Not Found'
+    });
+    await expect(apiClient.request('/test')).rejects.toThrow('API request failed: Not Found');
+  });
 
-      await expect(apiClient.request('/test')).rejects.toThrow('API request failed: Not Found');
+  it('should call request with correct endpoint', async () => {
+    const spy = jest.spyOn(apiClient, 'request');
+    await apiClient.getAllItems();
+    expect(spy).toHaveBeenCalledWith('/items');
+  });
+
+  it('should call request with correct endpoint and ID', async () => {
+    const spy = jest.spyOn(apiClient, 'request');
+    await apiClient.getItem(1);
+    expect(spy).toHaveBeenCalledWith('/items/1');
+  });
+
+  it('should call request with correct endpoint and data', async () => {
+    const spy = jest.spyOn(apiClient, 'request');
+    await apiClient.createItem('New Item');
+    expect(spy).toHaveBeenCalledWith('/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'New Item' })
     });
   });
 
-  describe('getAllItems', () => {
-    it('should call request with correct endpoint', async () => {
-      const spy = jest.spyOn(apiClient, 'request');
-      await apiClient.getAllItems();
-      expect(spy).toHaveBeenCalledWith('/items');
+  it('should call request with correct endpoint, ID, and data', async () => {
+    const spy = jest.spyOn(apiClient, 'request');
+    await apiClient.updateItem(1, 'Updated Item');
+    expect(spy).toHaveBeenCalledWith('/items/1', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Updated Item' })
     });
   });
 
-  describe('getItem', () => {
-    it('should call request with correct endpoint and ID', async () => {
-      const spy = jest.spyOn(apiClient, 'request');
-      await apiClient.getItem(1);
-      expect(spy).toHaveBeenCalledWith('/items/1');
-    });
-  });
-
-  describe('createItem', () => {
-    it('should call request with correct endpoint and data', async () => {
-      const spy = jest.spyOn(apiClient, 'request');
-      await apiClient.createItem('New Item');
-      expect(spy).toHaveBeenCalledWith('/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'New Item' })
-      });
-    });
-  });
-
-  describe('updateItem', () => {
-    it('should call request with correct endpoint, ID, and data', async () => {
-      const spy = jest.spyOn(apiClient, 'request');
-      await apiClient.updateItem(1, 'Updated Item');
-      expect(spy).toHaveBeenCalledWith('/items/1', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Updated Item' })
-      });
-    });
-  });
-
-  describe('deleteItem', () => {
-    it('should call request with correct endpoint and ID', async () => {
-      const spy = jest.spyOn(apiClient, 'request');
-      await apiClient.deleteItem(1);
-      expect(spy).toHaveBeenCalledWith('/items/1', { method: 'DELETE' });
-    });
-  });
-
-  describe('getSocialMediaData', () => {
-    it('should return cached data if it exists and is recent', async () => {
-      const cachedData = { posts: ['post1', 'post2'] };
-      localStorage.getItem.mockImplementation((key) => {
-        if (key === 'socialMediaData') return JSON.stringify(cachedData);
-        if (key === 'socialMediaDataTime') return (Date.now() - 30000).toString();
-      });
-
-      const result = await apiClient.getSocialMediaData();
-      expect(result).toEqual(cachedData);
-      expect(fetch).not.toHaveBeenCalled();
-    });
-
-    it('should fetch new data if cache is old', async () => {
-      const oldCachedData = { posts: ['old1', 'old2'] };
-      const newData = { posts: ['new1', 'new2'] };
-      localStorage.getItem.mockImplementation((key) => {
-        if (key === 'socialMediaData') return JSON.stringify(oldCachedData);
-        if (key === 'socialMediaDataTime') return (Date.now() - 70000).toString();
-      });
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(newData)
-      });
-
-      const result = await apiClient.getSocialMediaData();
-      expect(result).toEqual(newData);
-      expect(fetch).toHaveBeenCalled();
-      expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
-    });
-
-    it('should fetch new data if cache does not exist', async () => {
-      const newData = { posts: ['new1', 'new2'] };
-      localStorage.getItem.mockReturnValue(null);
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(newData)
-      });
-
-      const result = await apiClient.getSocialMediaData();
-      expect(result).toEqual(newData);
-      expect(fetch).toHaveBeenCalled();
-      expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
-    });
-
-    it('should throw an error if fetching fails', async () => {
-      localStorage.getItem.mockReturnValue(null);
-      fetch.mockRejectedValueOnce(new Error('Network error'));
-
-      await expect(apiClient.getSocialMediaData()).rejects.toThrow('Network error');
-    });
+  it('should call request with correct endpoint and ID', async () => {
+    const spy = jest.spyOn(apiClient, 'request');
+    await apiClient.deleteItem(1);
+    expect(spy).toHaveBeenCalledWith('/items/1', { method: 'DELETE' });
   });
 });
 
-// Add more tests here as needed
+describe('getSocialMediaData', () => {
+  it('should return cached data if it exists and is recent', async () => {
+    const cachedData = { posts: ['post1', 'post2'] };
+    localStorage.getItem.mockImplementation((key) => {
+      if (key === 'socialMediaData') return JSON.stringify(cachedData);
+      if (key === 'socialMediaDataTime') return (Date.now() - 30000).toString();
+    });
+    const result = await apiClient.getSocialMediaData();
+    expect(result).toEqual(cachedData);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('should fetch new data if cache is old', async () => {
+    const oldCachedData = { posts: ['old1', 'old2'] };
+    const newData = { posts: ['new1', 'new2'] };
+    localStorage.getItem.mockImplementation((key) => {
+      if (key === 'socialMediaData') return JSON.stringify(oldCachedData);
+      if (key === 'socialMediaDataTime') return (Date.now() - 70000).toString();
+    });
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(newData)
+    });
+
+    const result = await apiClient.getSocialMediaData();
+    expect(result).toEqual(newData);
+    expect(fetch).toHaveBeenCalled();
+    expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
+  });
+
+  it('should fetch new data if cache does not exist', async () => {
+    const newData = { posts: ['new1', 'new2'] };
+    localStorage.getItem.mockReturnValue(null);
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(newData)
+    });
+
+    const result = await apiClient.getSocialMediaData();
+    expect(result).toEqual(newData);
+    expect(fetch).toHaveBeenCalled();
+    expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
+  });
+
+  it('should throw an error if fetching fails', async () => {
+    localStorage.getItem.mockReturnValue(null);
+    fetch.mockRejectedValueOnce(new Error('Network error'));
+
+    await expect(apiClient.getSocialMediaData()).rejects.toThrow('Network error');
+  });
+  // Add more tests here as needed
 });
+
+
