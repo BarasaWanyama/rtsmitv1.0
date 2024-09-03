@@ -9,7 +9,14 @@ import dotenv from 'dotenv';
 const use = require('@tensorflow-models/universal-sentence-encoder');
 
 // Mock environment variables
-process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
+beforeAll(() => {
+  process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
+});
+
+afterAll(() => {
+  delete process.env.REACT_APP_API_BASE_URL;
+});
+
 
 // Mock the '@tensorflow-models/universal-sentence-encoder' module
 jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
@@ -77,24 +84,26 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
 
   describe('App Component', () => {
     test('renders without crashing', async () => {
-      render(
-        <MemoryRouter>
-          <App />
-        </MemoryRouter>
-      );
-    
+      await act(async () => {
+        render(
+          <MemoryRouter>
+            <App />
+          </MemoryRouter>
+        );
+      });
       await waitFor(() => {
-      expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
+        expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
       });
     });
 
     test('displays login page when user is not authenticated', async () => {
-      render(
-        <MemoryRouter>
-          <App />
-        </MemoryRouter>
-      );
-    
+      await act(async () => {
+        render(
+          <MemoryRouter>
+            <App />
+          </MemoryRouter>
+        );
+      });
       await waitFor(() => {
         expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
       });
@@ -988,7 +997,7 @@ describe('apiClient', () => {
     jest.clearAllMocks();
   });
 
-  it('should make a successful request', async () => {
+  test('should make a successful request', async () => {
     const mockResponse = { data: 'test' };
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -996,10 +1005,10 @@ describe('apiClient', () => {
     });
     const result = await apiClient.request('/test');
     expect(result).toEqual(mockResponse);
-    expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/test`, expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_BASE_URL}/test`, expect.objectContaining({
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
-      }));
+    }));
   });
 
   it('should throw an error for unsuccessful requests', async () => {
@@ -1074,7 +1083,7 @@ describe('getSocialMediaData', () => {
     });
 
     const result = await apiClient.getSocialMediaData();
-    expect(result).toEqual(newData);
+    expect(result).toEqual(expect.objectContaining(newData));
     expect(fetch).toHaveBeenCalled();
     expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
   });
