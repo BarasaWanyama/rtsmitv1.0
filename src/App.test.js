@@ -100,7 +100,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
       });
     });
   });
-  
+
   describe('loadModel function', () => {
     let setModel;
     let setError;
@@ -910,18 +910,18 @@ describe('handleLogout function', () => {
     getItem: jest.fn(),
     setItem: jest.fn(),
     removeItem: jest.fn()
-  };
-  jest.spyOn(window, 'localStorage', 'get').mockReturnValue(localStorageMock);
+    };
+    jest.spyOn(window, 'localStorage', 'get').mockReturnValue(localStorageMock);
 
-  // Mock window.location
-  originalWindowLocation = window.location;
-  delete window.location;
-  window.location = { href: '' };
+    // Mock window.location
+    originalWindowLocation = window.location;
+    delete window.location;
+    window.location = { href: '' };
 
-  // Spy on console methods
-  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-});
+    // Spy on console methods
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
 
   afterEach(() => {
     // Restore all mocks
@@ -929,7 +929,7 @@ describe('handleLogout function', () => {
 
     // Restore window.location
     window.location = originalWindowLocation;
-});
+  });
   test('should handle successful logout', async () => {
     const mockResponse = { message: 'Logged out successfully' };
     mockApiClient.request.mockResolvedValue(mockResponse);
