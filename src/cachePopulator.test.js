@@ -1,8 +1,8 @@
-const { populateCache } = require('../../server/cachePopulator');
-const Cache = require('../../server/cache');
+const { populateCache } = require('./server/cachePopulator');
+const Cache = require('./server/cache');
 
 // Mock the cache module
-jest.mock('../../server/cache', () => ({
+jest.mock('./server/cache', () => ({
   set: jest.fn(),
 }));
 
