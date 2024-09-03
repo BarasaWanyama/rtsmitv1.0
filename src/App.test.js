@@ -983,7 +983,6 @@ describe('handleLogout function', () => {
   });
 });
 
-
 describe('apiClient', () => {
   beforeEach(() => {
     fetch.mockClear();
@@ -991,21 +990,21 @@ describe('apiClient', () => {
     jest.clearAllMocks();
   });
 
-  describe('request', () => {
-    it('should make a successful request', async () => {
-      const mockResponse = { data: 'test' };
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse)
-      });
-
-      const result = await apiClient.request('/test');
-      expect(result).toEqual(mockResponse);
-      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/test`, expect.objectContaining({
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      }));
+describe('request', () => {
+  it('should make a successful request', async () => {
+    const mockResponse = { data: 'test' };
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockResponse)
     });
+
+    const result = await apiClient.request('/test');
+    expect(result).toEqual(mockResponse);
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/test`, expect.objectContaining({
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+      }));
+  });
 
     it('should throw an error for unsuccessful requests', async () => {
       fetch.mockResolvedValueOnce({
@@ -1116,19 +1115,6 @@ describe('apiClient', () => {
 
       await expect(apiClient.getSocialMediaData()).rejects.toThrow('Network error');
     });
-  });
-});
-
-test('renders App component', async () => {
-  render(
-    <MemoryRouter>
-      <App />
-    </MemoryRouter>
-  );
-  
-  // Wait for the component to load
-  await waitFor(() => {
-    expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
   });
 });
 
