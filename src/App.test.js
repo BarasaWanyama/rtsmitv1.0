@@ -1,11 +1,18 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, BrowserRouter } from 'react-router-dom';
 import App, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App';
 import * as tf from '@tensorflow/tfjs';
 
+
 const use = require('@tensorflow-models/universal-sentence-encoder');
+
+function render(ui, { route = '/' } = {}) {
+  window.history.pushState({}, 'Test page', route);
+  
+  return rtlRender(ui, { wrapper: BrowserRouter });
+}
 
 // Mock environment variables
 beforeAll(() => {
@@ -73,11 +80,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
   describe('App Component', () => {
     test('renders without crashing', async () => {
       await act(async () => {
-        render(
-          <MemoryRouter>
-            <App />
-          </MemoryRouter>
-        );
+        render(<App />);
       });
       await waitFor(() => {
         expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
@@ -86,11 +89,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
 
     test('displays login page when user is not authenticated', async () => {
       await act(async () => {
-        render(
-          <MemoryRouter>
-            <App />
-          </MemoryRouter>
-        );
+        render(<App />);
       });
       await waitFor(() => {
         expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
