@@ -1018,7 +1018,7 @@ describe('apiClient', () => {
     expect(spy).toHaveBeenCalledWith('/items/1');
   });
 
-  it('should call request with correct endpoint and data', async () => {
+  test('should call request with correct endpoint and data', async () => {
     const spy = jest.spyOn(apiClient, 'request');
     await apiClient.createItem('New Item');
     expect(spy).toHaveBeenCalledWith('/items', {
@@ -1028,7 +1028,7 @@ describe('apiClient', () => {
     });
   });
 
-  it('should call request with correct endpoint, ID, and data', async () => {
+  test('should call request with correct endpoint, ID, and data', async () => {
     const spy = jest.spyOn(apiClient, 'request');
     await apiClient.updateItem(1, 'Updated Item');
     expect(spy).toHaveBeenCalledWith('/items/1', {
@@ -1038,7 +1038,7 @@ describe('apiClient', () => {
     });
   });
 
-  it('should call request with correct endpoint and ID', async () => {
+  test('should call request with correct endpoint and ID', async () => {
     const spy = jest.spyOn(apiClient, 'request');
     await apiClient.deleteItem(1);
     expect(spy).toHaveBeenCalledWith('/items/1', { method: 'DELETE' });
@@ -1046,7 +1046,8 @@ describe('apiClient', () => {
 });
 
 describe('getSocialMediaData', () => {
-  it('should return cached data if it exists and is recent', async () => {
+  
+  test('should return cached data if it exists and is recent', async () => {
     const cachedData = { posts: ['post1', 'post2'] };
     localStorage.getItem.mockImplementation((key) => {
       if (key === 'socialMediaData') return JSON.stringify(cachedData);
@@ -1057,7 +1058,7 @@ describe('getSocialMediaData', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('should fetch new data if cache is old', async () => {
+  test('should fetch new data if cache is old', async () => {
     const oldCachedData = { posts: ['old1', 'old2'] };
     const newData = { posts: ['new1', 'new2'] };
     localStorage.getItem.mockImplementation((key) => {
@@ -1075,7 +1076,7 @@ describe('getSocialMediaData', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
   });
 
-  it('should fetch new data if cache does not exist', async () => {
+  test('should fetch new data if cache does not exist', async () => {
     const newData = { posts: ['new1', 'new2'] };
     localStorage.getItem.mockReturnValue(null);
     fetch.mockResolvedValueOnce({
@@ -1089,7 +1090,7 @@ describe('getSocialMediaData', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
   });
 
-  it('should throw an error if fetching fails', async () => {
+  test('should throw an error if fetching fails', async () => {
     localStorage.getItem.mockReturnValue(null);
     fetch.mockRejectedValueOnce(new Error('Network error'));
 
