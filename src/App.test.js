@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import App, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App';
 import * as tf from '@tensorflow/tfjs';
-import dotenv from 'dotenv';
 
 const use = require('@tensorflow-models/universal-sentence-encoder');
 
@@ -26,17 +25,6 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
     })
   })
 }));
-
-// Load the environment variables
-dotenv.config();
-
-// access the API_BASE_URL:
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
-// check if API_BASE_URL is set:
-if (!API_BASE_URL) {
-  throw new Error('REACT_APP_API_BASE_URL is not set in the environment');
-}
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -1005,13 +993,13 @@ describe('apiClient', () => {
     });
     const result = await apiClient.request('/test');
     expect(result).toEqual(mockResponse);
-    expect(fetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_BASE_URL}/test`, expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith(`http://localhost:3000/test`, expect.objectContaining({
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     }));
   });
 
-  it('should throw an error for unsuccessful requests', async () => {
+  test('should throw an error for unsuccessful requests', async () => {
     fetch.mockResolvedValueOnce({
       ok: false,
       statusText: 'Not Found'
@@ -1019,13 +1007,13 @@ describe('apiClient', () => {
     await expect(apiClient.request('/test')).rejects.toThrow('API request failed: Not Found');
   });
 
-  it('should call request with correct endpoint', async () => {
+  test('should call request with correct endpoint', async () => {
     const spy = jest.spyOn(apiClient, 'request');
     await apiClient.getAllItems();
     expect(spy).toHaveBeenCalledWith('/items');
   });
 
-  it('should call request with correct endpoint and ID', async () => {
+  test('should call request with correct endpoint and ID', async () => {
     const spy = jest.spyOn(apiClient, 'request');
     await apiClient.getItem(1);
     expect(spy).toHaveBeenCalledWith('/items/1');
