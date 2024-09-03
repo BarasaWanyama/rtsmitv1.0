@@ -1,10 +1,12 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import App, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App';
 import * as tf from '@tensorflow/tfjs';
 import dotenv from 'dotenv';
+
+const use = require('@tensorflow-models/universal-sentence-encoder');
 
 // Mock environment variables
 process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
@@ -73,28 +75,29 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
   }),
 }));
 
-describe('App Component', () => {
-  test('renders without crashing', async () => {
-    render(
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    );
+  describe('App Component', () => {
+    test('renders without crashing', async () => {
+      render(
+        <MemoryRouter>
+          <App />
+        </MemoryRouter>
+      );
     
-    await waitFor(() => {
+      await waitFor(() => {
       expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
+      });
     });
-  });
 
-  test('displays login page when user is not authenticated', async () => {
-    render(
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    );
+    test('displays login page when user is not authenticated', async () => {
+      render(
+        <MemoryRouter>
+          <App />
+        </MemoryRouter>
+      );
     
-    await waitFor(() => {
-      expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
+      });
     });
   });
   
@@ -887,10 +890,10 @@ describe('handleLogout function', () => {
   let mockApiClient;
   let mockSetUser;
   let mockSetError;
-  let originalLocalStorage;
   let originalWindowLocation;
   let consoleLogSpy;
   let consoleErrorSpy;
+  let localStorageMock;
 
   beforeEach(() => {
     mockApiClient = {
@@ -899,29 +902,34 @@ describe('handleLogout function', () => {
     mockSetUser = jest.fn();
     mockSetError = jest.fn();
 
+  
+
+  beforeEach(() => {
     // Mock localStorage
-    originalLocalStorage = global.localStorage;
-    global.localStorage = {
-      removeItem: jest.fn()
-    };
+    localStorageMock = {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn()
+  };
+  jest.spyOn(window, 'localStorage', 'get').mockReturnValue(localStorageMock);
 
-    // Mock window.location
-    originalWindowLocation = window.location;
-    delete window.location;
-    window.location = { href: '' };
+  // Mock window.location
+  originalWindowLocation = window.location;
+  delete window.location;
+  window.location = { href: '' };
 
-    // Spy on console methods
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
+  // Spy on console methods
+  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+});
 
   afterEach(() => {
-    global.localStorage = originalLocalStorage;
-    window.location = originalWindowLocation;
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
-  });
+    // Restore all mocks
+    jest.restoreAllMocks();
 
+    // Restore window.location
+    window.location = originalWindowLocation;
+});
   test('should handle successful logout', async () => {
     const mockResponse = { message: 'Logged out successfully' };
     mockApiClient.request.mockResolvedValue(mockResponse);
@@ -1113,9 +1121,9 @@ describe('apiClient', () => {
 
 test('renders App component', async () => {
   render(
-    <BrowserRouter>
+    <MemoryRouter>
       <App />
-    </BrowserRouter>
+    </MemoryRouter>
   );
   
   // Wait for the component to load
