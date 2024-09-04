@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, screen, waitFor, act, render as rtlRender } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent, render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, BrowserRouter } from 'react-router-dom';
-import App, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './App';
+import { BrowserRouter } from 'react-router-dom';
+import AppForTesting, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './AppForTesting';
 import * as tf from '@tensorflow/tfjs';
-
 
 const use = require('@tensorflow-models/universal-sentence-encoder');
 
@@ -13,6 +12,13 @@ function customRender(ui, { route = '/' } = {}) {
   
   return rtlRender(ui, { wrapper: BrowserRouter });
 }
+
+// Mock API client
+jest.mock('./apiClient', () => ({
+  request: jest.fn(),
+  getSocialMediaData: jest.fn(),
+  // Add other methods you use in your tests
+}));
 
 // Mock environment variables
 beforeAll(() => {
@@ -37,18 +43,12 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
 global.fetch = jest.fn();
 
 // Mock localStorage
-const localStorageMock = (() => {
-  let store = {};
-  return {
-    getItem: jest.fn(key => store[key]),
-    setItem: jest.fn((key, value) => {
-      store[key] = value.toString();
-    }),
-    clear: () => {
-      store = {};
-    }
-  };
-})();
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn()
+};
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 
@@ -56,6 +56,8 @@ beforeEach(() => {
   fetch.mockClear();
   localStorage.clear();
   jest.clearAllMocks();
+  apiClient.request.mockResolvedValue({ /* mock data */ });
+  apiClient.getSocialMediaData.mockResolvedValue([/* mock social media data */]);
 });
 
 
@@ -80,21 +82,64 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
   describe('App Component', () => {
     test('renders without crashing', async () => {
       await act(async () => {
-        customRender(<App />);
+        customRender(<AppForTesting />);
       });
+      
       await waitFor(() => {
         expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
       });
     });
 
     test('displays login page when user is not authenticated', async () => {
+      apiClient.request.mockResolvedValueOnce(null); // Mock no user
+  
       await act(async () => {
-        customRender(<App />);
+        customRender(<AppForTesting />);
       });
+  
       await waitFor(() => {
         expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
       });
     });
+    test('displays dashboard when user is authenticated', async () => {
+      const mockUser = { displayName: 'Test User' };
+      apiClient.request.mockResolvedValueOnce(mockUser);
+  
+      await act(async () => {
+        customRender(<AppForTesting />);
+      });
+  
+      await waitFor(() => {
+        expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
+      });
+    }); 
+    
+    test('handles logout correctly', async () => {
+      const mockUser = { displayName: 'Test User' };
+      apiClient.request.mockResolvedValueOnce(mockUser);
+      
+      await act(async () => {
+        customRender(<AppForTesting />);
+      });
+    
+      await waitFor(() => {
+        expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
+      });
+    
+      apiClient.request.mockResolvedValueOnce({ message: 'Logged out successfully' });
+    
+      await act(async () => {
+        fireEvent.click(screen.getByText(/Logout/i));
+      });
+    
+      await waitFor(() => {
+        expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
+      });
+    
+      // Optional: Verify that the user state has been cleared
+      expect(apiClient.request).toHaveBeenCalledWith('/auth/logout', expect.any(Object));
+    });
+
   });
 
   describe('loadModel function', () => {
