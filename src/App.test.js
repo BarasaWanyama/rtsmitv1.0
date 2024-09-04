@@ -8,7 +8,7 @@ import * as tf from '@tensorflow/tfjs';
 
 const use = require('@tensorflow-models/universal-sentence-encoder');
 
-function render(ui, { route = '/' } = {}) {
+function customRender(ui, { route = '/' } = {}) {
   window.history.pushState({}, 'Test page', route);
   
   return rtlRender(ui, { wrapper: BrowserRouter });
@@ -80,7 +80,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
   describe('App Component', () => {
     test('renders without crashing', async () => {
       await act(async () => {
-        render(<App />);
+        customRender(<App />);
       });
       await waitFor(() => {
         expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
@@ -89,7 +89,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
 
     test('displays login page when user is not authenticated', async () => {
       await act(async () => {
-        render(<App />);
+        customRender(<App />);
       });
       await waitFor(() => {
         expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
