@@ -4,6 +4,9 @@ const passport = require('passport');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const axios = require('axios');
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Mock external dependencies
 jest.mock('passport');

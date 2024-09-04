@@ -4,6 +4,9 @@ const Cache = require('../server/cache');
 // Mock the cache module
 jest.mock('../server/cache', () => ({
   set: jest.fn(),
+  get: jest.fn(),
+  del: jest.fn(),
+  flush: jest.fn(),
 }));
 
 describe('cachePopulator', () => {

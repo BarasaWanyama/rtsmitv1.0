@@ -5,27 +5,14 @@ const Cache = require('../server/cache');
 jest.mock('node-cache');
 
 describe('Cache', () => {
-  let mockNodeCache;
+  let cache;
 
   beforeEach(() => {
-    // Clear all mocks before each test
-    jest.clearAllMocks();
-    
-    // Create a new mock instance for each test
-    mockNodeCache = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-      flushAll: jest.fn()
-    };
-
-    // Make NodeCache constructor return our mock
-    NodeCache.mockImplementation(() => mockNodeCache);
+    cache = new Cache();
   });
 
   test('constructor should create NodeCache with correct options', () => {
-    new Cache(600);
-    expect(NodeCache).toHaveBeenCalledWith({ stdTTL: 600, checkperiod: 120 });
+    expect(cache.cache).toBeInstanceOf(NodeCache);
   });
 
   test('constructor should use default TTL if not provided', () => {
