@@ -14,11 +14,18 @@ function customRender(ui, { route = '/' } = {}) {
 }
 
 // Mock API client
-jest.mock('./apiClient', () => ({
-  request: jest.fn(),
-  getSocialMediaData: jest.fn(),
-  // Add other methods you use in your tests
-}));
+jest.mock('./AppForTesting', () => {
+  const originalModule = jest.requireActual('./AppForTesting');
+  return {
+    __esModule: true,
+    ...originalModule,
+    apiClient: {
+      request: jest.fn(),
+      getSocialMediaData: jest.fn(),
+      // Add other methods you use in your tests
+    },
+  };
+});
 
 // Mock environment variables
 beforeAll(() => {
@@ -81,13 +88,13 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
 
   describe('App Component', () => {
     test('renders without crashing', async () => {
+      apiClient.request.mockResolvedValueOnce(null); // Mock no user for initial load
+  
       await act(async () => {
         customRender(<AppForTesting />);
       });
       
-      await waitFor(() => {
-        expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
-      });
+      expect(screen.getByText(/Real-Time Social Media Impact Tracker/i)).toBeInTheDocument();
     });
 
     test('displays login page when user is not authenticated', async () => {

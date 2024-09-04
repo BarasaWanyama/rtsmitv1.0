@@ -1,6 +1,10 @@
 const { populateCache } = require('../server/cachePopulator');
 const Cache = require('../server/cache');
 
+// Mock axios
+jest.mock('axios');
+const axios = require('axios');
+
 // Mock the cache module
 jest.mock('../server/cache', () => ({
   set: jest.fn(),
