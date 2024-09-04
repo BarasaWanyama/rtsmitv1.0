@@ -2,6 +2,8 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+jest.mock('axios');
+
 const request = require('supertest');
 const express = require('express');
 const passport = require('passport');
@@ -13,7 +15,6 @@ const axios = require('axios');
 // Mock external dependencies
 jest.mock('passport');
 jest.mock('mongoose');
-jest.mock('axios');
 
 // Import the app (assuming you've exported it from server.js)
 const app = require('../server/server');
