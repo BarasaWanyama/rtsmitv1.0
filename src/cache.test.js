@@ -1,5 +1,5 @@
 const NodeCache = require('node-cache');
-const Cache = require('./server/cache');
+const Cache = require('../server/cache');
 
 // Mock NodeCache
 jest.mock('node-cache');

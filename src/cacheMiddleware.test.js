@@ -1,7 +1,7 @@
-const { cacheMiddleware, clearCache, cache } = require('./server/cacheMiddleware');
+const { cacheMiddleware, clearCache, cache } = require('../server/cacheMiddleware');
 
 // Mock the cache module
-jest.mock('./server/cache', () => ({
+jest.mock('../server/cache', () => ({
   get: jest.fn(),
   set: jest.fn(),
   del: jest.fn()
