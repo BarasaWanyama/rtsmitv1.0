@@ -62,7 +62,7 @@ Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 beforeEach(() => {
   fetch.mockClear();
-  localStorage.clear();
+  localStorageMock.clear();
   jest.clearAllMocks();
   apiClient.request.mockResolvedValue({ /* mock data */ });
   apiClient.getSocialMediaData.mockResolvedValue([/* mock social media data */]);
