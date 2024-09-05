@@ -8,6 +8,8 @@ jest.mock('./AppForTesting', () => {
       request: jest.fn(),
       getSocialMediaData: jest.fn(),
       updateItem: jest.fn(),
+      getItem: jest.fn(),
+      deleteItem: jest.fn(),
       // Add other methods you use in your tests
     },
   };
