@@ -4,7 +4,7 @@ jest.mock('node-cache', () => {
     get: jest.fn(),
     set: jest.fn(),
     del: jest.fn(),
-    flushAll: jest.fn()
+    flushAll: jest.fn(),
   }));
 });
 
