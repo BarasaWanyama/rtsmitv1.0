@@ -129,7 +129,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
       apiClient.getSocialMediaData.mockResolvedValueOnce([]);
     
       await act(async () => {
-        render(<App />);
+        customRender(<AppForTesting />);
       });
     
       await waitFor(() => {
