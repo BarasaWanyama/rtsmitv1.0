@@ -137,7 +137,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
       });
     
       await act(async () => {
-        userEvent.click(screen.getByText(/Logout/i));
+        fireEvent.click(screen.getByText(/Logout/i));
       });
     
       await waitFor(() => {
@@ -1025,9 +1025,9 @@ describe('handleLogout function', () => {
 describe('apiClient', () => {
   
   beforeEach(() => {
-    fetch.mockClear();
-    localStorage.clear();
     jest.clearAllMocks();
+    apiClient.request.mockReset();
+    apiClient.getSocialMediaData.mockReset();
   });
 
   test('should make a successful request', async () => {
