@@ -7,6 +7,7 @@ jest.mock('./AppForTesting', () => {
     apiClient: {
       request: jest.fn(),
       getSocialMediaData: jest.fn(),
+      updateItem: jest.fn(),
       // Add other methods you use in your tests
     },
   };
