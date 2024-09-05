@@ -1,8 +1,10 @@
+jest.mock('axios');
+const axios = require('axios');
+
 const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-jest.mock('axios');
 
 const request = require('supertest');
 const express = require('express');

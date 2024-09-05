@@ -367,6 +367,7 @@ describe('fetchSocialMediaData function', () => {
     };
     const mockModel = {};
     const mockAnalyzeSentiment = jest.fn()
+    mockAnalyzeSentiment
       .mockResolvedValueOnce({ score: 0.8, label: 'Positive' })
       .mockRejectedValueOnce(new Error('Analysis failed'))
       .mockResolvedValueOnce({ score: 0, label: 'Neutral' });
@@ -377,7 +378,7 @@ describe('fetchSocialMediaData function', () => {
   
     await fetchSocialMediaData(
       mockApiClient,
-      mockModel,
+      {}, // mock model
       mockAnalyzeSentiment,
       mockSetSocialMediaData,
       mockSetSentimentData,

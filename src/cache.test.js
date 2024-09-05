@@ -1,13 +1,14 @@
-const NodeCache = jest.fn();
-const mockNodeCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  del: jest.fn(),
-  flushAll: jest.fn(),
-};
-NodeCache.mockImplementation(() => mockNodeCache);
-jest.mock('node-cache', () => NodeCache);
+// Mock Node cache
+jest.mock('node-cache', () => {
+  return jest.fn().mockImplementation(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    flushAll: jest.fn()
+  }));
+});
 
+const NodeCache = require('node-cache');
 const Cache = require('../server/cache');
 
 describe('Cache', () => {
