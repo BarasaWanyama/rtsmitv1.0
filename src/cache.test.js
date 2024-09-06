@@ -1,15 +1,20 @@
-// Mock Node cache
-jest.mock('node-cache', () => {
-  return jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-    flushAll: jest.fn()
-  }));
-});
-
 const NodeCache = require('node-cache');
 const Cache = require('../server/cache');
+
+// Mock Node cache
+let mockNodeCache;
+
+jest.mock('node-cache', () => {
+  return jest.fn().mockImplementation(() => {
+    mockNodeCache = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      flushAll: jest.fn()
+    };
+    return mockNodeCache;
+  });
+});
 
 describe('Cache', () => {
   let cache;
@@ -20,53 +25,44 @@ describe('Cache', () => {
   });
 
   test('constructor should create NodeCache with correct options', () => {
-    expect(cache.cache).toBeInstanceOf(NodeCache);
-  });
-
-  test('constructor should use default TTL if not provided', () => {
-    new Cache();
+    const defaultCache = new Cache();
     expect(NodeCache).toHaveBeenCalledWith({ stdTTL: 300, checkperiod: 60 });
+    
+    const customCache = new Cache(600);
+    expect(NodeCache).toHaveBeenCalledWith({ stdTTL: 600, checkperiod: 120 });
   });
 
-  test('get should call NodeCache get method', () => {
-    const cache = new Cache();
-    cache.get('testKey');
+  test('get should call NodeCache get method and return the result', () => {
+    mockNodeCache.get.mockReturnValue('cachedValue');
+    const result = cache.get('testKey');
     expect(mockNodeCache.get).toHaveBeenCalledWith('testKey');
+    expect(result).toBe('cachedValue');
   });
 
   test('set should call NodeCache set method with correct parameters', () => {
-    const cache = new Cache();
     cache.set('testKey', 'testValue', 100);
     expect(mockNodeCache.set).toHaveBeenCalledWith('testKey', 'testValue', 100);
   });
+  
 
   test('del should call NodeCache del method', () => {
-    const cache = new Cache();
     cache.del('testKey');
     expect(mockNodeCache.del).toHaveBeenCalledWith('testKey');
   });
 
   test('flush should call NodeCache flushAll method', () => {
-    const cache = new Cache();
     cache.flush();
     expect(mockNodeCache.flushAll).toHaveBeenCalled();
   });
 
-  test('get should return the value from NodeCache', () => {
-    const cache = new Cache();
-    mockNodeCache.get.mockReturnValue('cachedValue');
-    const result = cache.get('testKey');
-    expect(result).toBe('cachedValue');
+  test('get should return undefined for non-existent key', () => {
+    mockNodeCache.get.mockReturnValue(undefined);
+    const result = cache.get('nonExistentKey');
+    expect(result).toBeUndefined();
   });
-
-  test('set should not throw when called with correct parameters', () => {
-    const cache = new Cache();
-    expect(() => cache.set('testKey', 'testValue', 100)).not.toThrow();
-  });
-
-  test('del should not throw when called with a key', () => {
-    const cache = new Cache();
-    expect(() => cache.del('testKey')).not.toThrow();
+  
+  test('set should throw an error if key is not a string', () => {
+    expect(() => cache.set(123, 'value')).toThrow();
   });
 
   test('flush should not throw when called', () => {
