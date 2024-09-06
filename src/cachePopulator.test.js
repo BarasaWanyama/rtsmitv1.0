@@ -1,14 +1,9 @@
 jest.mock('axios', () => ({
-  default: {
-    get: jest.fn(),
-    post: jest.fn(),
-    transformData: jest.fn(),
-    generateSyntheticData: jest.fn(),
-    populateCache: jest.fn(),
-    // Add other methods you use
-  },
+  get: jest.fn(),
+  post: jest.fn(),
 }));
-const axios = require('axios');
+
+import axios, * as others from 'axios';
 
 const { populateCache } = require('../server/cachePopulator');
 const cache = require('../server/cache');
@@ -28,8 +23,8 @@ describe('cachePopulator', () => {
     jest.clearAllMocks();
   });
 
-  test('populateCache should generate synthetic data for all platforms', () => {
-    populateCache();
+  test('populateCache should generate synthetic data for all platforms', async () => {
+    await populateCache();
 
     // Check if cache.set was called with the correct arguments
     expect(cache.set).toHaveBeenCalledWith('social_media_data', expect.any(Array), 3600);
@@ -42,8 +37,8 @@ describe('cachePopulator', () => {
     expect(syntheticData.map(item => item.platform)).toEqual(['Facebook', 'LinkedIn', 'Platform X']);
   });
 
-  test('each platform should have the correct data structure', () => {
-    populateCache();
+  test('each platform should have the correct data structure', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
 
@@ -56,8 +51,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('each platform should have 10 posts', () => {
-    populateCache();
+  test('each platform should have 10 posts', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
 
@@ -66,8 +61,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('posts should have the correct structure', () => {
-    populateCache();
+  test('posts should have the correct structure', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
 
@@ -83,8 +78,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('totalEngagement should be the sum of likes and shares', () => {
-    populateCache();
+  test('totalEngagement should be the sum of likes and shares', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
 
@@ -94,8 +89,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('topPost should be the post with the most likes', () => {
-    populateCache();
+  test('topPost should be the post with the most likes', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
 
@@ -106,8 +101,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('post ids should be unique and follow the correct format', () => {
-    populateCache();
+  test('post ids should be unique and follow the correct format', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
 
@@ -121,8 +116,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('post dates should be within the last 7 days', () => {
-    populateCache();
+  test('post dates should be within the last 7 days', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
     const now = Date.now();
@@ -137,8 +132,8 @@ describe('cachePopulator', () => {
     });
   });
 
-  test('post topics should be one of Technology, Business, or Entertainment', () => {
-    populateCache();
+  test('post topics should be one of Technology, Business, or Entertainment', async () => {
+    await populateCache();
 
     const syntheticData = cache.set.mock.calls[0][1];
     const validTopics = ['Technology', 'Business', 'Entertainment'];
