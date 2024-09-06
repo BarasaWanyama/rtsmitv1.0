@@ -24,24 +24,53 @@ const mongoose = require('mongoose');
 jest.mock('passport', () => ({
   initialize: jest.fn(() => (req, res, next) => next()),
   session: jest.fn(() => (req, res, next) => next()),
+  authenticate: jest.fn((strategy, options) => (req, res, next) => {
+    req.user = { id: '123', displayName: 'Test User' };
+    next();
+  }),
+  use: jest.fn(),
+  serializeUser: jest.fn((user, done) => done(null, user.id)),
+  deserializeUser: jest.fn((id, done) => done(null, { id, displayName: 'Test User' })),
 }));
-jest.mock('mongoose');
+
+jest.mock('mongoose', () => ({
+  connect: jest.fn(),
+  connection: {
+    on: jest.fn(),
+    once: jest.fn(),
+  },
+}));
+
+jest.mock('express-session', () => jest.fn(() => (req, res, next) => {
+  req.session = {};
+  next();
+}));
+
+// Mock environment variables
+process.env.FRONTEND_URL = 'http://localhost:3000';
+process.env.GOOGLE_CLIENT_ID = 'test_client_id';
+process.env.GOOGLE_CLIENT_SECRET = 'test_client_secret';
 
 // Import the app (assuming you've exported it from server.js)
 const app = require('../server/server');
 
+// Global beforeAll and afterAll
+let server;
+beforeAll((done) => {
+  server = app.listen(done);
+});
+
+afterAll((done) => {
+  mongoose.connection.close();
+  server.close(done);
+});
+
+// Clear all mocks before each test
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('Server', () => {
-  beforeAll(() => {
-    // Mock passport functions
-    passport.use = jest.fn();
-    passport.serializeUser = jest.fn();
-    passport.deserializeUser = jest.fn();
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   test('GET / should return welcome message', async () => {
     const response = await request(app).get('/');
     expect(response.status).toBe(200);
@@ -50,20 +79,15 @@ describe('Server', () => {
 
   test('GET /auth/google should redirect to Google', async () => {
     const response = await request(app).get('/auth/google');
-    expect(response.status).toBe(302); // Redirect status code
+    expect(response.status).toBe(302);
     expect(response.header.location).toContain('accounts.google.com');
   });
 
   test('GET /auth/google/callback should handle Google callback', async () => {
-    passport.authenticate.mockImplementation((strategy, options) => {
-      return (req, res, next) => {
-        req.user = { id: '123', displayName: 'Test User' };
-        next();
-      };
-    });
-
-    const response = await request(app).get('/auth/google/callback');
-    expect(response.status).toBe(302); // Redirect status code
+    const response = await request(app)
+      .get('/auth/google/callback')
+      .set('user', JSON.stringify({ id: '123', displayName: 'Test User' }));
+    expect(response.status).toBe(302);
     expect(response.header.location).toBe(process.env.FRONTEND_URL);
   });
 
@@ -99,10 +123,12 @@ describe('Server', () => {
       platformX: { posts: [{ id: 3, content: 'Platform X post' }] }
     };
 
-    axios.get
-      .mockResolvedValueOnce({ data: mockData.facebook })
-      .mockResolvedValueOnce({ data: mockData.linkedin })
-      .mockResolvedValueOnce({ data: mockData.platformX });
+    jest.mock('axios', () => ({
+      get: jest.fn()
+        .mockResolvedValueOnce({ data: mockData.facebook })
+        .mockResolvedValueOnce({ data: mockData.linkedin })
+        .mockResolvedValueOnce({ data: mockData.platformX })
+    }));
 
     const response = await request(app)
       .get('/api/social-media-data')
@@ -123,7 +149,9 @@ describe('Server', () => {
   });
 
   test('GET /api/social-media-data should handle errors', async () => {
-    axios.get.mockRejectedValue(new Error('API error'));
+    jest.mock('axios', () => ({
+      get: jest.fn().mockRejectedValue(new Error('API error'))
+    }));
 
     const response = await request(app)
       .get('/api/social-media-data')
@@ -135,6 +163,5 @@ describe('Server', () => {
       details: 'API error'
     });
   });
-
   // Add more tests for other routes (e.g., /api/items, /api/social-media-posts)
 });

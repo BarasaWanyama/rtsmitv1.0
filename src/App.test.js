@@ -23,14 +23,28 @@ import * as tf from '@tensorflow/tfjs';
 
 const use = require('@tensorflow-models/universal-sentence-encoder');
 
+// Helper function for rendering with Router
 function customRender(ui, { route = '/' } = {}) {
   window.history.pushState({}, 'Test page', route);
   
   return rtlRender(ui, { wrapper: BrowserRouter });
 }
 
+// Mock TensorFlow.js
+jest.mock('@tensorflow/tfjs', () => ({
+  tidy: jest.fn((callback) => callback()),
+  scalar: jest.fn(),
+}));
 
-// Mock environment variables
+// Mock Universal Sentence Encoder
+jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
+  load: jest.fn().mockResolvedValue({
+    embed: jest.fn().mockResolvedValue({
+      arraySync: jest.fn().mockReturnValue([[1, 2, 3]])
+    })
+  })
+}));
+
 beforeAll(() => {
   process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
 });
@@ -39,15 +53,6 @@ afterAll(() => {
   delete process.env.REACT_APP_API_BASE_URL;
 });
 
-
-// Mock the '@tensorflow-models/universal-sentence-encoder' module
-jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
-  load: jest.fn().mockResolvedValue({
-    embed: jest.fn().mockResolvedValue({
-      arraySync: jest.fn().mockReturnValue([[1, 2, 3]])
-    })
-  })
-}));
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -61,38 +66,17 @@ const localStorageMock = {
 };
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-
+// Clear all mocks before each test
 beforeEach(() => {
-  fetch.mockClear();
-  localStorageMock.clear();
   jest.clearAllMocks();
-  apiClient.request.mockResolvedValue({ /* mock data */ });
-  apiClient.getSocialMediaData.mockResolvedValue([/* mock social media data */]);
+  apiClientMock.request.mockResolvedValue({ /* mock data */ });
+  apiClientMock.getSocialMediaData.mockResolvedValue([/* mock social media data */]);
 });
-
-
-// Mock the TensorFlow.js and USE model
-jest.mock('@tensorflow/tfjs', () => ({
-  tidy: jest.fn((callback) => callback()),
-  scalar: jest.fn(),
-}));
-jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
-  load: jest.fn().mockResolvedValue({
-    embed: jest.fn().mockResolvedValue({
-      sum: jest.fn().mockReturnValue({
-        div: jest.fn().mockReturnValue({
-          dataSync: jest.fn().mockReturnValue([0.5]),
-        }),
-      }),
-      dispose: jest.fn(),
-    }),
-  }),
-}));
 
   describe('App Component', () => {
     test('renders without crashing', async () => {
-      apiClient.request.mockResolvedValueOnce(null); // Mock no user for initial load
-  
+      apiClientMock.request.mockResolvedValueOnce(null); // Mock no user for initial load
+    
       await act(async () => {
         customRender(<AppForTesting />);
       });
@@ -101,7 +85,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
     });
 
     test('displays login page when user is not authenticated', async () => {
-      apiClient.request.mockResolvedValueOnce(null); // Mock no user
+      apiClientMock.request.mockResolvedValueOnce(null); // Mock no user
   
       await act(async () => {
         customRender(<AppForTesting />);
@@ -111,6 +95,7 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
         expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
       });
     });
+
     test('displays dashboard when user is authenticated', async () => {
       apiClientMock.request.mockResolvedValueOnce({ displayName: 'Test User' });
       apiClientMock.getSocialMediaData.mockResolvedValueOnce([]);
@@ -122,13 +107,13 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
       await waitFor(() => {
         expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
       });
-    }); 
+    });
     
     test('handles logout correctly', async () => {
-      apiClient.request
+      apiClientMock.request
         .mockResolvedValueOnce({ displayName: 'Test User' })
         .mockResolvedValueOnce({ message: 'Logged out successfully' });
-      apiClient.getSocialMediaData.mockResolvedValueOnce([]);
+      apiClientMock.getSocialMediaData.mockResolvedValueOnce([]);
     
       await act(async () => {
         customRender(<AppForTesting />);
