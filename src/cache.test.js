@@ -1,7 +1,7 @@
 const NodeCache = require('node-cache');
 const Cache = require('../server/cache');
 
-// Mock Node cache
+// Mock NodeCache
 let mockNodeCache;
 
 jest.mock('node-cache', () => {
@@ -16,6 +16,7 @@ jest.mock('node-cache', () => {
   });
 });
 
+
 describe('Cache', () => {
   let cache;
 
@@ -25,7 +26,6 @@ describe('Cache', () => {
   });
 
   test('constructor should create NodeCache with correct options', () => {
-    const defaultCache = new Cache();
     expect(NodeCache).toHaveBeenCalledWith({ stdTTL: 300, checkperiod: 60 });
     
     const customCache = new Cache(600);
@@ -43,7 +43,6 @@ describe('Cache', () => {
     cache.set('testKey', 'testValue', 100);
     expect(mockNodeCache.set).toHaveBeenCalledWith('testKey', 'testValue', 100);
   });
-  
 
   test('del should call NodeCache del method', () => {
     cache.del('testKey');
