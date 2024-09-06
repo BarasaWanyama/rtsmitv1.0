@@ -21,7 +21,10 @@ const mongoose = require('mongoose');
 
 
 // Mock external dependencies
-jest.mock('passport');
+jest.mock('passport', () => ({
+  initialize: jest.fn(() => (req, res, next) => next()),
+  session: jest.fn(() => (req, res, next) => next()),
+}));
 jest.mock('mongoose');
 
 // Import the app (assuming you've exported it from server.js)

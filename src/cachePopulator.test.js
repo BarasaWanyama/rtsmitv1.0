@@ -2,6 +2,9 @@ jest.mock('axios', () => ({
   default: {
     get: jest.fn(),
     post: jest.fn(),
+    transformData: jest.fn(),
+    generateSyntheticData: jest.fn(),
+    populateCache: jest.fn(),
     // Add other methods you use
   },
 }));

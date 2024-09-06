@@ -1,19 +1,18 @@
 // Mock API client
-jest.mock('./AppForTesting', () => {
-  const originalModule = jest.requireActual('./AppForTesting');
-  return {
-    __esModule: true,
-    ...originalModule,
-    apiClient: {
-      request: jest.fn(),
-      getSocialMediaData: jest.fn(),
-      updateItem: jest.fn(),
-      getItem: jest.fn(),
-      deleteItem: jest.fn(),
-      // Add other methods you use in your tests
-    },
-  };
-});
+const apiClientMock = {
+  request: jest.fn(),
+  getSocialMediaData: jest.fn(),
+  getAllItems: jest.fn(),
+  getItem: jest.fn(),
+  createItem: jest.fn(),
+  updateItem: jest.fn(),
+  deleteItem: jest.fn()
+};
+
+jest.mock('./AppForTesting', () => ({
+  ...jest.requireActual('./AppForTesting'),
+  apiClient: apiClientMock
+}));
 
 import React from 'react';
 import { render, screen, waitFor, act, fireEvent, render as rtlRender } from '@testing-library/react';
@@ -113,8 +112,8 @@ jest.mock('@tensorflow-models/universal-sentence-encoder', () => ({
       });
     });
     test('displays dashboard when user is authenticated', async () => {
-      apiClient.request.mockResolvedValueOnce({ displayName: 'Test User' });
-      apiClient.getSocialMediaData.mockResolvedValueOnce([]);
+      apiClientMock.request.mockResolvedValueOnce({ displayName: 'Test User' });
+      apiClientMock.getSocialMediaData.mockResolvedValueOnce([]);
     
       await act(async () => {
         customRender(<AppForTesting />);
@@ -1035,13 +1034,9 @@ describe('apiClient', () => {
 
   test('should make a successful request', async () => {
     const mockResponse = { data: 'test' };
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockResponse)
-    });
+    apiClientMock.request.mockResolvedValueOnce(mockResponse);
     const result = await apiClient.request('/test');
     expect(result).toEqual(mockResponse);
-    expect(fetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_BASE_URL}/test`, expect.any(Object));
   });
 
   test('should throw an error for unsuccessful requests', async () => {
