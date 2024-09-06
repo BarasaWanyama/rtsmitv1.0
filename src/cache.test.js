@@ -3,22 +3,22 @@ const Cache = require('../server/cache');
 
 // Mock NodeCache
 jest.mock('node-cache', () => {
-  return jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-    flushAll: jest.fn()
-  }));
+  return jest.fn().mockImplementation(() => {
+    return {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      flushAll: jest.fn()
+    };
+  });
 });
 
 describe('Cache', () => {
   let cache;
-  let mockNodeCacheInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     cache = new Cache();
-    mockNodeCacheInstance = cache.cache;
   });
 
   test('constructor should create NodeCache with correct options', () => {
@@ -29,32 +29,31 @@ describe('Cache', () => {
   });
 
   test('get should call NodeCache get method', () => {
-    mockNodeCacheInstance.get.mockReturnValue('cachedValue');
+    cache.cache.get.mockReturnValue('cachedValue');
     const result = cache.get('testKey');
-    expect(mockNodeCacheInstance.get).toHaveBeenCalledWith('testKey');
+    expect(cache.cache.get).toHaveBeenCalledWith('testKey');
     expect(result).toBe('cachedValue');
   });
 
   test('set should call NodeCache set method with correct parameters', () => {
     cache.set('testKey', 'testValue', 100);
-    expect(mockNodeCacheInstance.set).toHaveBeenCalledWith('testKey', 'testValue', 100);
+    expect(cache.cache.set).toHaveBeenCalledWith('testKey', 'testValue', 100);
   });
 
   test('del should call NodeCache del method', () => {
     cache.del('testKey');
-    expect(mockNodeCacheInstance.del).toHaveBeenCalledWith('testKey');
+    expect(cache.cache.del).toHaveBeenCalledWith('testKey');
   });
 
   test('flush should call NodeCache flushAll method', () => {
     cache.flush();
-    expect(mockNodeCacheInstance.flushAll).toHaveBeenCalled();
+    expect(cache.cache.flushAll).toHaveBeenCalled();
   });
 
   test('get should return undefined for non-existent key', () => {
-    mockNodeCacheInstance.get.mockReturnValue(undefined);
+    cache.cache.get.mockReturnValue(undefined);
     const result = cache.get('nonExistentKey');
     expect(result).toBeUndefined();
   });
   
-
 });
