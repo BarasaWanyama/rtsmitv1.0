@@ -15,10 +15,12 @@ jest.mock('node-cache', () => {
 
 describe('Cache', () => {
   let cache;
+  let mockNodeCacheInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     cache = new Cache();
+    mockNodeCacheInstance = NodeCache.mock.results[0].value;
   });
 
   test('constructor should create NodeCache with correct options', () => {
@@ -29,29 +31,29 @@ describe('Cache', () => {
   });
 
   test('get should call NodeCache get method', () => {
-    cache.cache.get.mockReturnValue('cachedValue');
+    mockNodeCacheInstance.get.mockReturnValue('cachedValue');
     const result = cache.get('testKey');
-    expect(cache.cache.get).toHaveBeenCalledWith('testKey');
+    expect(mockNodeCacheInstance.get).toHaveBeenCalledWith('testKey');
     expect(result).toBe('cachedValue');
   });
 
   test('set should call NodeCache set method with correct parameters', () => {
     cache.set('testKey', 'testValue', 100);
-    expect(cache.cache.set).toHaveBeenCalledWith('testKey', 'testValue', 100);
+    expect(mockNodeCacheInstance.set).toHaveBeenCalledWith('testKey', 'testValue', 100);
   });
 
   test('del should call NodeCache del method', () => {
     cache.del('testKey');
-    expect(cache.cache.del).toHaveBeenCalledWith('testKey');
+    expect(mockNodeCacheInstance.del).toHaveBeenCalledWith('testKey');
   });
 
   test('flush should call NodeCache flushAll method', () => {
     cache.flush();
-    expect(cache.cache.flushAll).toHaveBeenCalled();
+    expect(mockNodeCacheInstance.flushAll).toHaveBeenCalled();
   });
 
   test('get should return undefined for non-existent key', () => {
-    cache.cache.get.mockReturnValue(undefined);
+    mockNodeCacheInstance.get.mockReturnValue(undefined);
     const result = cache.get('nonExistentKey');
     expect(result).toBeUndefined();
   });
