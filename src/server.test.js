@@ -1,3 +1,13 @@
+const axios = require('axios');
+const { TextEncoder, TextDecoder } = require('util');
+const request = require('supertest');
+const express = require('express');
+const passport = require('passport');
+const session = require('express-session');
+const mongoose = require('mongoose');
+
+
+
 jest.mock('axios');
 jest.mock('passport', () => {
   const originalModule = jest.requireActual('passport');
@@ -33,16 +43,8 @@ jest.mock('express-session', () => {
   });
 });
 
-const axios = require('axios');
-const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
-
-const request = require('supertest');
-const express = require('express');
-const passport = require('passport');
-const session = require('express-session');
-const mongoose = require('mongoose');
 
 // Mock environment variables
 process.env.FRONTEND_URL = 'http://localhost:3000';

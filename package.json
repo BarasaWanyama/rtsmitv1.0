@@ -31,7 +31,9 @@
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "test": "react-scripts test"
+    "test": "react-scripts test",
+    "test:server": "jest --testEnvironment=node --config=jest.config.js"
+
   },
   "eslintConfig": {
     "extends": [
@@ -60,6 +62,11 @@
     "jest": "^27.5.1",
     "mongodb-memory-server": "^10.0.0",
     "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    }
   }
-  
 }
