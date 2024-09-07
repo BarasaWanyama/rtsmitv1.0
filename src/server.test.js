@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, * as others from 'axios';
 const { TextEncoder, TextDecoder } = require('util');
 const request = require('supertest');
 const express = require('express');
