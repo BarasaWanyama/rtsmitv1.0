@@ -1,10 +1,11 @@
-import axios, * as others from 'axios';
+const axios = require('axios');
 const { TextEncoder, TextDecoder } = require('util');
 const request = require('supertest');
 const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
 const mongoose = require('mongoose');
+
 
 
 jest.mock('axios');
