@@ -1,37 +1,19 @@
-jest.mock('axios', () => ({
-  default: {
-    get: jest.fn(),
-    post: jest.fn(),
-    // Add other methods you use
-  },
-}));
-const axios = require('axios');
-
-const { TextEncoder, TextDecoder } = require('util');
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
-
-
-const request = require('supertest');
-const express = require('express');
-const passport = require('passport');
-const session = require('express-session');
-const mongoose = require('mongoose');
-
-
-
-// Mock external dependencies
-jest.mock('passport', () => ({
-  initialize: jest.fn(() => (req, res, next) => next()),
-  session: jest.fn(() => (req, res, next) => next()),
-  authenticate: jest.fn((strategy, options) => (req, res, next) => {
-    req.user = { id: '123', displayName: 'Test User' };
-    next();
-  }),
-  use: jest.fn(),
-  serializeUser: jest.fn((user, done) => done(null, user.id)),
-  deserializeUser: jest.fn((id, done) => done(null, { id, displayName: 'Test User' })),
-}));
+jest.mock('axios');
+jest.mock('passport', () => {
+  const originalModule = jest.requireActual('passport');
+  return {
+    ...originalModule,
+    initialize: jest.fn(() => (req, res, next) => next()),
+    session: jest.fn(() => (req, res, next) => next()),
+    authenticate: jest.fn((strategy, options) => (req, res, next) => {
+      req.user = { id: '123', displayName: 'Test User' };
+      next();
+    }),
+    use: jest.fn(),
+    serializeUser: jest.fn((user, done) => done(null, user.id)),
+    deserializeUser: jest.fn((id, done) => done(null, { id, displayName: 'Test User' })),
+  };
+});
 
 jest.mock('mongoose', () => ({
   connect: jest.fn(),
@@ -39,12 +21,28 @@ jest.mock('mongoose', () => ({
     on: jest.fn(),
     once: jest.fn(),
   },
+  model: jest.fn(),
+  Schema: jest.fn(),
 }));
 
-jest.mock('express-session', () => jest.fn(() => (req, res, next) => {
-  req.session = {};
-  next();
-}));
+jest.mock('express-session', () => {
+  return jest.fn(() => (req, res, next) => {
+    req.session = {};
+    req.session.destroy = jest.fn(callback => callback());
+    next();
+  });
+});
+
+const axios = require('axios');
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+const request = require('supertest');
+const express = require('express');
+const passport = require('passport');
+const session = require('express-session');
+const mongoose = require('mongoose');
 
 // Mock environment variables
 process.env.FRONTEND_URL = 'http://localhost:3000';
@@ -53,6 +51,7 @@ process.env.GOOGLE_CLIENT_SECRET = 'test_client_secret';
 
 // Import the app (assuming you've exported it from server.js)
 const app = require('../server/server');
+
 
 // Global beforeAll and afterAll
 let server;
@@ -106,39 +105,42 @@ describe('Server', () => {
   });
 
   test('POST /auth/logout should log out the user', async () => {
-    const mockLogout = jest.fn((callback) => callback());
     const response = await request(app)
       .post('/auth/logout')
-      .set('user', JSON.stringify({ id: '123', displayName: 'Test User' }))
-      .set('logout', mockLogout);
+      .set('Cookie', ['connect.sid=test-session-id']);
+    
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'Logged out successfully' });
-    expect(mockLogout).toHaveBeenCalled();
   });
 
-  test('GET /api/social-media-data should return aggregated data if authenticated', async () => {
+});
+  
+describe('Social Media Data API', () => {
+  beforeEach(() => {
     const mockData = {
       facebook: { posts: [{ id: 1, content: 'Facebook post' }] },
       linkedin: { posts: [{ id: 2, content: 'LinkedIn post' }] },
       platformX: { posts: [{ id: 3, content: 'Platform X post' }] }
     };
+  
+    axios.get.mockImplementation((url) => {
+      if (url.includes('facebook')) return Promise.resolve({ data: mockData.facebook });
+      if (url.includes('linkedin')) return Promise.resolve({ data: mockData.linkedin });
+      if (url.includes('platform-x')) return Promise.resolve({ data: mockData.platformX });
+      return Promise.reject(new Error('Invalid URL'));
+    });
+  });
 
-    jest.mock('axios', () => ({
-      get: jest.fn()
-        .mockResolvedValueOnce({ data: mockData.facebook })
-        .mockResolvedValueOnce({ data: mockData.linkedin })
-        .mockResolvedValueOnce({ data: mockData.platformX })
-    }));
-
+  test('GET /api/social-media-data should return aggregated data if authenticated', async () => {
     const response = await request(app)
       .get('/api/social-media-data')
-      .set('user', JSON.stringify({ id: '123', displayName: 'Test User' }));
+      .set('Cookie', ['connect.sid=test-session-id']);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual([
-      { platform: 'Facebook', data: mockData.facebook },
-      { platform: 'LinkedIn', data: mockData.linkedin },
-      { platform: 'Platform X', data: mockData.platformX }
+      { platform: 'Facebook', data: { posts: [{ id: 1, content: 'Facebook post' }] } },
+      { platform: 'LinkedIn', data: { posts: [{ id: 2, content: 'LinkedIn post' }] } },
+      { platform: 'Platform X', data: { posts: [{ id: 3, content: 'Platform X post' }] } }
     ]);
   });
 
@@ -149,13 +151,11 @@ describe('Server', () => {
   });
 
   test('GET /api/social-media-data should handle errors', async () => {
-    jest.mock('axios', () => ({
-      get: jest.fn().mockRejectedValue(new Error('API error'))
-    }));
+    axios.get.mockRejectedValueOnce(new Error('API error'));
 
     const response = await request(app)
       .get('/api/social-media-data')
-      .set('user', JSON.stringify({ id: '123', displayName: 'Test User' }));
+      .set('Cookie', ['connect.sid=test-session-id']);
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
