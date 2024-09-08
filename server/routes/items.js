@@ -1,7 +1,9 @@
 // routes/items.js
-const router = require('express').Router();
-const Item = require('../models/Item');
-const { clearCache, cache } = require('../cacheMiddleware');
+import { Router } from 'express';
+import Item from '../models/Item';
+import { clearCache, cache } from '../cacheMiddleware';
+
+const router = Router();
 
 // GET all items
 router.route('/').get((req, res) => {
@@ -77,4 +79,4 @@ router.route('/:id').delete((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
-module.exports = router;
+export default router;

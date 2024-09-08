@@ -2,7 +2,7 @@
 import SocialMediaPost from './models/SocialMediaPost.js';
 import { cacheMiddleware, clearCache } from'./cacheMiddleware.js';
 import { populateCache } from './cachePopulator.js';
-import path from 'node:path';
+import path from 'path';
 import axios from 'axios';
 import express from'express';
 import mongoose from'mongoose';
@@ -117,6 +117,55 @@ app.get('/', (req, res) => {
 
 // Call populateCache when the server starts
 populateCache();
+
+// Social Media Data Aggregation Route
+app.get('/api/social-media-posts', isAuthenticated, cacheMiddleware(300), async (req, res) => {
+  try {
+    // Check if the connection is ready
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database not connected');
+    }
+    
+    const posts = await SocialMediaPost.find().lean().exec();
+    res.json(posts);
+  
+    // Fetch data from each platform
+    const facebookData = await fetchSocialMediaData(process.env.FACEBOOK_API_URL, {
+      access_token: process.env.FACEBOOK_API_KEY
+    });
+
+    const linkedInData = await fetchSocialMediaData(process.env.LINKEDIN_API_URL, {
+      oauth2_access_token: process.env.LINKEDIN_API_KEY
+    });
+
+    const platformXData = await fetchSocialMediaData(process.env.PLATFORM_X_API_URL, {
+      api_key: process.env.PLATFORM_X_API_KEY
+    });
+
+    // Aggregate and send the data
+    res.json([
+      { platform: 'Facebook', data: facebookData },
+      { platform: 'LinkedIn', data: linkedInData },
+      { platform: 'Platform X', data: platformXData }
+    ]);
+  } catch (error) {
+    console.error('Detailed error fetching social media data:', error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Error data:', error.response.data);
+      console.error('Error status:', error.response.status);
+      console.error('Error headers:', error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Error request:', error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error message:', error.message);
+    }
+    res.status(500).json({ error: 'Failed to fetch social media data', details: error.message });
+  }
+});
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {

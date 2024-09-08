@@ -1,29 +1,33 @@
-const axios = require('axios');
-const { TextEncoder, TextDecoder } = require('util');
-const request = require('supertest');
-const express = require('express');
-const passport = require('passport');
-const session = require('express-session');
-const mongoose = require('mongoose');
+import axios from 'axios';
+import { TextEncoder, TextDecoder } from 'util';
+import request from 'supertest';
+import express from 'express';
+import passport from 'passport';
+import session from 'express-session';
+import mongoose from 'mongoose';
+import { jest } from '@jest/globals';
 
-
+// Define mock functions
+const mockInitialize = () => (req, res, next) => next();
+const mockSession = () => (req, res, next) => next();
+const mockAuthenticate = () => (req, res, next) => {
+  req.user = { id: '123', displayName: 'Test User' };
+  next();
+};
+const mockUse = () => {};
+const mockSerializeUser = (user, done) => done(null, user.id);
+const mockDeserializeUser = (id, done) => done(null, { id, displayName: 'Test User' });
 
 jest.mock('axios');
-jest.mock('passport', () => {
-  const originalModule = jest.requireActual('passport');
-  return {
-    ...originalModule,
-    initialize: jest.fn(() => (req, res, next) => next()),
-    session: jest.fn(() => (req, res, next) => next()),
-    authenticate: jest.fn((strategy, options) => (req, res, next) => {
-      req.user = { id: '123', displayName: 'Test User' };
-      next();
-    }),
-    use: jest.fn(),
-    serializeUser: jest.fn((user, done) => done(null, user.id)),
-    deserializeUser: jest.fn((id, done) => done(null, { id, displayName: 'Test User' })),
-  };
-});
+jest.mock('passport', () => ({
+  initialize: mockInitialize,
+  session: mockSession,
+  authenticate: mockAuthenticate,
+  use: mockUse,
+  serializeUser: mockSerializeUser,
+  deserializeUser: mockDeserializeUser,
+}));
+
 
 jest.mock('mongoose', () => ({
   connect: jest.fn(),
@@ -43,6 +47,24 @@ jest.mock('express-session', () => {
   });
 });
 
+// Mock cors
+jest.mock('cors', () => {
+  return jest.fn(() => (req, res, next) => next());
+});
+
+// Mock passport-google-oauth20
+jest.mock('passport-google-oauth20', () => {
+  return {
+    Strategy: jest.fn((options, verifyFunction) => ({
+      name: 'google',
+      authenticate: jest.fn((req, options) => {
+        const user = { id: '123', displayName: 'Test User' };
+        verifyFunction(null, null, user, null);
+      }),
+    })),
+  };
+});
+
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
@@ -52,7 +74,7 @@ process.env.GOOGLE_CLIENT_ID = 'test_client_id';
 process.env.GOOGLE_CLIENT_SECRET = 'test_client_secret';
 
 // Import the app (assuming you've exported it from server.js)
-const app = require('../server/server');
+import app from '../server/server.js';
 
 
 // Global beforeAll and afterAll

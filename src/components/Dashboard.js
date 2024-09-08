@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
-import { TopicPieChart } from './TopicPieChart';
-import Header from './Header';
-import Sidebar from './Sidebar';
+import { TopicPieChart } from './TopicPieChart.js';
+import Header from './Header.js';
+import Sidebar from './Sidebar.js';
 
 export const Dashboard = ({
   socialMediaData,

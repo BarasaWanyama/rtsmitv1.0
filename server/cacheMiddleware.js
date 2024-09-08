@@ -1,5 +1,5 @@
 // cacheMiddleware.js
-const cache = require('./cache');
+import cache from './cache';
 
 const cacheMiddleware = (duration) => (req, res, next) => {
   const key = req.originalUrl || req.url;
@@ -21,4 +21,4 @@ const clearCache = (key) => {
   cache.del(key);
 };
 
-module.exports = { cacheMiddleware, clearCache, cache };
+export { cacheMiddleware, clearCache, cache };

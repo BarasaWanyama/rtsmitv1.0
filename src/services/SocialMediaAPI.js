@@ -1,17 +1,19 @@
 // SocialMediaAPI.js
 
 import { useState, useEffect } from 'react';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const API_ENDPOINTS = {
-  facebook: 'https://graph.facebook.com/v12.0/me',
-  linkedin: 'https://www.linkedin.com/developers/apps/220935646/auth',
-  platformX: 'https://developer.x.com/en/portal/projects/1810300982124765184/apps/29028629/keys'
+  facebook: process.env.FACEBOOK_API_URL,
+  linkedin: process.env.LINKEDIN_API_URL,
+  platformX: process.env.PLATFORM_X_API_URL
 };
 
 const API_KEYS = {
-  facebook: 'YOUR_FACEBOOK_API_KEY',
-  linkedin: 'YOUR_LINKEDIN_API_KEY',
-  platformX: 'YOUR_PLATFORM_X_API_KEY'
+  facebook: process.env.FACEBOOK_API_KEY,
+  linkedin: process.env.LINKEDIN_API_KEY,
+  platformX: process.env.PLATFORM_X_API_KEY
 };
 
 async function fetchApiData(url, params) {

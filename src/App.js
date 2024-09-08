@@ -3,9 +3,9 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import * as tf from '@tensorflow/tfjs';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
-import { Dashboard } from './components/Dashboard';
-import AlertsNotifications from './components/AlertsNotifications';
-import Login from './components/Login';
+import { Dashboard } from './components/Dashboard.js';
+import AlertsNotifications from './components/AlertsNotifications.js';
+import Login from './components/Login.js';
 import './App.css';
 
 // ErrorFallback Component

@@ -1,6 +1,6 @@
 // cachePopulator.js
-const cache = require('./cache');
-const axios = require('axios');
+import cache from './cache';
+import axios from'axios';
 
 const fetchPublicData = async (platform) => {
   let url;
@@ -120,4 +120,4 @@ const generateSyntheticData = (platform) => {
       };
 };
 
-module.exports = { populateCache };
+export default populateCache;

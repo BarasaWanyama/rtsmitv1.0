@@ -1,7 +1,9 @@
 // routes/socialMediaPosts.js
-const router = require('express').Router();
-const SocialMediaPost = require('../models/SocialMediaPost');
-const { clearCache, cache } = require('../cacheMiddleware');
+import { Router } from 'express';
+import SocialMediaPost from '../models/SocialMediaPost';
+import { clearCache, cache } from '../cacheMiddleware';
+
+const router = Router();
 
 // GET all social media posts
 router.route('/').get((req, res) => {
@@ -90,4 +92,4 @@ router.route('/:id').delete((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
-module.exports = router;
+export default router;
