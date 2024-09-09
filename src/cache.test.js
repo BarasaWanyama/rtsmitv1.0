@@ -3,10 +3,12 @@ import NodeCache from 'node-cache';
 // Mock the node-cache module
 jest.mock('node-cache');
 
-// Use a real implementation of the Cache class, but mock its dependencies
-const actualCache = jest.requireActual('../server/cache.js').default;
+// Create a mock of the Cache class
+const mockCacheModule = jest.createMockFromModule('../server/cache.js');
+jest.mock('../server/cache.js', () => mockCacheModule);
 
 describe('Cache', () => {
+  let Cache;
   let cache;
   let mockNodeCacheInstance;
 
@@ -24,10 +26,25 @@ describe('Cache', () => {
     // Make the NodeCache constructor return our mock instance
     NodeCache.mockImplementation(() => mockNodeCacheInstance);
 
-    // Create a new instance of the actual Cache class for each test
-    cache = actualCache;
-    // Replace its internal NodeCache instance with our mock
-    cache.cache = mockNodeCacheInstance;
+    // Reset the mock Cache class
+    Cache = class {
+      constructor(ttlSeconds = 300) {
+        this.cache = new NodeCache({ 
+          stdTTL: ttlSeconds, 
+          checkperiod: ttlSeconds * 0.2 
+        });
+      }
+
+      get(key) { return this.cache.get(key); }
+      set(key, value, ttl) { return this.cache.set(key, value, ttl); }
+      del(key) { return this.cache.del(key); }
+      flush() { return this.cache.flushAll(); }
+    };
+
+    mockCacheModule.default = Cache;
+
+    // Create a new instance of the Cache class for each test
+    cache = new Cache();
   });
 
   test('cache should be initialized with correct options', () => {
