@@ -1,7 +1,7 @@
 // Import required modules and configure environment variables
 import SocialMediaPost from './models/SocialMediaPost.js';
-import { cacheMiddleware, clearCache } from'./cacheMiddleware.js';
-import { populateCache } from './cachePopulator.js';
+import { cacheMiddleware, clearCache, cache } from'./cacheMiddleware.js';
+import populateCache from './cachePopulator.js';
 import path from 'node:path';
 import axios from 'axios';
 import express from'express';

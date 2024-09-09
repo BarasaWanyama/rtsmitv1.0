@@ -1,6 +1,12 @@
 // cachePopulator.js
-import cache from './cache';
+import cache from './cache.js';
 import axios from'axios';
+
+// Define a default TTL (Time To Live) in seconds
+const ttl = 3600; // 1 hour
+
+cache.set('key', 'value', ttl);
+const value = cache.get('key');
 
 const fetchPublicData = async (platform) => {
   let url;
@@ -89,12 +95,12 @@ const populateCache = async () => {
   const validData = publicData.filter(data => data !== null);
 
   if (validData.length > 0) {
-    cache.set('social_media_data', validData, 3600); // Cache for 1 hour
+    cache.set('social_media_data', validData, ttl); // Cache for 1 hour
     console.log('Cache populated with public API data');
   } else {
     console.log('Failed to fetch public API data. Using synthetic data as fallback.');
     const syntheticData = platforms.map(generateSyntheticData);
-    cache.set('social_media_data', syntheticData, 3600);
+    cache.set('social_media_data', syntheticData, ttl);
     console.log('Cache populated with synthetic data');
   }
 };

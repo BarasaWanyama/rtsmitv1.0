@@ -1,7 +1,7 @@
 // routes/socialMediaPosts.js
 import { Router } from 'express';
-import SocialMediaPost from '../models/SocialMediaPost';
-import { clearCache, cache } from '../cacheMiddleware';
+import SocialMediaPost from '../models/SocialMediaPost.js';
+import { clearCache, cache } from '../cacheMiddleware.js';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ router.route('/').get((req, res) => {
 
   SocialMediaPost.find()
     .then(posts => {
-      cache.set(cacheKey, posts, 300); // Cache for 5 minutes
+      Cache.set(cacheKey, posts, 300); // Cache for 5 minutes
       res.json(posts);
     })
     .catch(err => res.status(400).json('Error: ' + err));

@@ -11,16 +11,16 @@ class Cache {
   }
 
   set(key, value, ttl) {
-    this.cache.set(key, value, ttl);
+    return this.cache.set(key, value, ttl);
   }
 
   del(key) {
-    this.cache.del(key);
+    return this.cache.del(key);
   }
 
   flush() {
-    this.cache.flushAll();
+    return this.cache.flushAll();
   }
 }
 
-export default Cache;
+export default new Cache();

@@ -1,7 +1,7 @@
 // routes/items.js
 import { Router } from 'express';
-import Item from '../models/Item';
-import { clearCache, cache } from '../cacheMiddleware';
+import Item from '../models/Item.js';
+import { clearCache, cache } from '../cacheMiddleware.js';
 
 const router = Router();
 

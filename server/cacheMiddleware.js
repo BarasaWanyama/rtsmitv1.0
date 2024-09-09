@@ -1,5 +1,5 @@
 // cacheMiddleware.js
-import cache from './cache';
+import cache from './cache.js';
 
 const cacheMiddleware = (duration) => (req, res, next) => {
   const key = req.originalUrl || req.url;
