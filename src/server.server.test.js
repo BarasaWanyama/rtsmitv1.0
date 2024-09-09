@@ -10,12 +10,15 @@ jest.mock('express-session');
 jest.mock('cors');
 jest.mock('passport-google-oauth20');
 
-// Mock mongoose
+// Define mock functions outside jest.mock()
 const mockConnect = jest.fn();
 const mockOn = jest.fn();
 const mockOnce = jest.fn();
 const mockClose = jest.fn();
+const mockModel = jest.fn();
+const mockSchema = jest.fn();
 
+// Mock mongoose
 jest.mock('mongoose', () => ({
   connect: mockConnect,
   connection: {
@@ -23,8 +26,8 @@ jest.mock('mongoose', () => ({
     once: mockOnce,
     close: mockClose,
   },
-  model: jest.fn(),
-  Schema: jest.fn(),
+  model: mockModel,
+  Schema: mockSchema,
 }));
 
 // Set up environment variables for testing
