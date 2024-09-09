@@ -10,41 +10,39 @@ jest.mock('cors');
 jest.mock('passport-google-oauth20');
 jest.mock('mongoose');
 
-// Set up mock implementations after the jest.mock() calls
+// Set up mock implementations
 const mockAxios = {
   get: jest.fn(),
   post: jest.fn()
 };
 
 const mockPassport = {
-  initialize: () => (req, res, next) => next(),
-  session: () => (req, res, next) => next(),
-  authenticate: () => (req, res, next) => {
+  initialize: jest.fn(() => (req, res, next) => next()),
+  session: jest.fn(() => (req, res, next) => next()),
+  authenticate: jest.fn(() => (req, res, next) => {
     req.user = { id: '123', displayName: 'Test User' };
     next();
-  },
+  }),
   use: jest.fn(),
-  serializeUser: (user, done) => done(null, user),
-  deserializeUser: (obj, done) => done(null, obj)
+  serializeUser: jest.fn((user, done) => done(null, user)),
+  deserializeUser: jest.fn((obj, done) => done(null, obj))
 };
 
-const mockExpressSession = () => (req, res, next) => {
+const mockExpressSession = jest.fn(() => (req, res, next) => {
   req.session = {};
   next();
-};
+});
 
-const mockCors = () => (req, res, next) => next();
+const mockCors = jest.fn(() => (req, res, next) => next());
 
 const mockGoogleStrategy = {
-  Strategy: class {
-    constructor(options, verifyFunction) {
-      this.name = 'google';
-      this.authenticate = (req, options) => {
-        const user = { id: '123', displayName: 'Test User' };
-        verifyFunction(null, null, user, null);
-      };
-    }
-  }
+  Strategy: jest.fn((options, verifyFunction) => ({
+    name: 'google',
+    authenticate: jest.fn((req, options) => {
+      const user = { id: '123', displayName: 'Test User' };
+      verifyFunction(null, null, user, null);
+    }),
+  }))
 };
 
 const mockMongoose = {
@@ -61,8 +59,8 @@ const mockMongoose = {
 // Assign mock implementations
 jest.mocked(axios).mockImplementation(() => mockAxios);
 jest.mocked(passport).mockImplementation(() => mockPassport);
-jest.mocked(require('express-session')).mockImplementation(() => mockExpressSession);
-jest.mocked(require('cors')).mockImplementation(() => mockCors);
+jest.mocked(require('express-session')).mockReturnValue(mockExpressSession);
+jest.mocked(require('cors')).mockReturnValue(mockCors);
 jest.mocked(require('passport-google-oauth20')).mockImplementation(() => mockGoogleStrategy);
 jest.mocked(require('mongoose')).mockImplementation(() => mockMongoose);
 
