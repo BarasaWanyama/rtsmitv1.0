@@ -4,13 +4,12 @@ jest.mock('axios', () => ({
 }));
 
 import axios, * as others from 'axios';
-
-const { populateCache } = require('../server/cachePopulator');
-const cache = require('../server/cache');
+import populateCache from '../server/cachePopulator.js';
+import cache from '../server/cache.js';
 
 
 // Mock the cache module
-jest.mock('../server/cache', () => ({
+jest.mock('../server/cache.js', () => ({
   set: jest.fn(),
   get: jest.fn(),
   del: jest.fn(),
