@@ -6,12 +6,17 @@ import { TextEncoder, TextDecoder } from 'util';
 jest.mock('axios');
 jest.mock('passport');
 jest.mock('express-session');
-// Remove the jest.mock('cors') line
 jest.mock('passport-google-oauth20');
 jest.mock('mongoose');
 
-// Manually mock cors
-jest.mock('cors', () => jest.fn(() => (req, res, next) => next()));
+// Manually mock cors without using jest.fn()
+jest.mock('cors', () => {
+  return function() {
+    return function(req, res, next) {
+      next();
+    };
+  };
+});
 
 // Set up mock implementations
 const mockAxios = {
@@ -35,8 +40,6 @@ const mockExpressSession = jest.fn(() => (req, res, next) => {
   req.session = {};
   next();
 });
-
-// Remove the mockCors constant as it's no longer needed
 
 const mockGoogleStrategy = {
   Strategy: jest.fn((options, verifyFunction) => ({
@@ -63,7 +66,6 @@ const mockMongoose = {
 jest.mocked(axios).mockImplementation(() => mockAxios);
 jest.mocked(passport).mockImplementation(() => mockPassport);
 jest.mocked(require('express-session')).mockReturnValue(mockExpressSession);
-// Remove the cors mock assignment
 jest.mocked(require('passport-google-oauth20')).mockImplementation(() => mockGoogleStrategy);
 jest.mocked(require('mongoose')).mockImplementation(() => mockMongoose);
 
