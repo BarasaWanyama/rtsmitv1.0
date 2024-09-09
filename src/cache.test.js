@@ -1,29 +1,16 @@
 import NodeCache from 'node-cache';
 
-// Mock NodeCache
+// Mock the node-cache module
 jest.mock('node-cache');
 
-// Mock the cache module
-jest.mock('../server/cache.js', () => {
-  // Create a mock Cache instance
-  const mockCache = {
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-    flush: jest.fn()
-  };
-  return { __esModule: true, default: mockCache };
-});
-
-// Import the mocked cache instance
-import cacheInstance from '../server/cache.js';
+// Use a real implementation of the Cache class, but mock its dependencies
+const actualCache = jest.requireActual('../server/cache.js').default;
 
 describe('Cache', () => {
+  let cache;
   let mockNodeCacheInstance;
-  let mockGet, mockSet, mockDel, mockFlushAll;
 
   beforeEach(() => {
-    // Clear all mocks before each test
     jest.clearAllMocks();
 
     // Create a mock NodeCache instance
@@ -33,15 +20,17 @@ describe('Cache', () => {
       del: jest.fn(),
       flushAll: jest.fn()
     };
+
     // Make the NodeCache constructor return our mock instance
     NodeCache.mockImplementation(() => mockNodeCacheInstance);
 
-    // Replace the cache property of our mocked cacheInstance
-    cacheInstance.cache = mockNodeCacheInstance;
+    // Create a new instance of the actual Cache class for each test
+    cache = actualCache;
+    // Replace its internal NodeCache instance with our mock
+    cache.cache = mockNodeCacheInstance;
   });
 
   test('cache should be initialized with correct options', () => {
-    // This test assumes the Cache is created with default options
     expect(NodeCache).toHaveBeenCalledWith({ 
       stdTTL: 300, 
       checkperiod: 60 
@@ -53,7 +42,7 @@ describe('Cache', () => {
     const value = 'testValue';
     mockNodeCacheInstance.get.mockReturnValue(value);
 
-    const result = cacheInstance.get(key);
+    const result = cache.get(key);
 
     expect(mockNodeCacheInstance.get).toHaveBeenCalledWith(key);
     expect(result).toBe(value);
@@ -64,7 +53,7 @@ describe('Cache', () => {
     const value = 'testValue';
     const ttl = 100;
 
-    cacheInstance.set(key, value, ttl);
+    cache.set(key, value, ttl);
 
     expect(mockNodeCacheInstance.set).toHaveBeenCalledWith(key, value, ttl);
   });
@@ -72,13 +61,13 @@ describe('Cache', () => {
   test('del should call NodeCache del method', () => {
     const key = 'testKey';
 
-    cacheInstance.del(key);
+    cache.del(key);
 
     expect(mockNodeCacheInstance.del).toHaveBeenCalledWith(key);
   });
 
   test('flush should call NodeCache flushAll method', () => {
-    cacheInstance.flush();
+    cache.flush();
 
     expect(mockNodeCacheInstance.flushAll).toHaveBeenCalled();
   });
@@ -86,9 +75,9 @@ describe('Cache', () => {
   test('get should return undefined for non-existent key', () => {
     const nonExistentKey = 'nonExistentKey';
     mockNodeCacheInstance.get.mockReturnValue(undefined);
-  
-    const result = cacheInstance.get(nonExistentKey);
-  
+
+    const result = cache.get(nonExistentKey);
+
     expect(mockNodeCacheInstance.get).toHaveBeenCalledWith(nonExistentKey);
     expect(result).toBeUndefined();
   });
