@@ -1,62 +1,70 @@
 import request from 'supertest';
-import mongoose from 'mongoose';
 import { jest } from '@jest/globals';
 import { TextEncoder, TextDecoder } from 'util';
 
-// Mock external dependencies
-jest.mock('axios', () => ({
-  get: jest.fn(),
-  post: jest.fn(),
-}));
+// Mock external modules
+jest.mock('axios');
+jest.mock('passport');
+jest.mock('express-session');
+jest.mock('cors');
+jest.mock('passport-google-oauth20');
+jest.mock('mongoose');
 
-jest.mock('passport', () => ({
-  initialize: jest.fn(() => (req, res, next) => next()),
-  session: jest.fn(() => (req, res, next) => next()),
-  authenticate: jest.fn(() => (req, res, next) => {
+// Set up mock implementations after the jest.mock() calls
+const mockAxios = {
+  get: jest.fn(),
+  post: jest.fn()
+};
+
+const mockPassport = {
+  initialize: () => (req, res, next) => next(),
+  session: () => (req, res, next) => next(),
+  authenticate: () => (req, res, next) => {
     req.user = { id: '123', displayName: 'Test User' };
     next();
-  }),
+  },
   use: jest.fn(),
-  serializeUser: jest.fn((user, done) => done(null, user)),
-  deserializeUser: jest.fn((obj, done) => done(null, obj)),
-}));
+  serializeUser: (user, done) => done(null, user),
+  deserializeUser: (obj, done) => done(null, obj)
+};
 
-jest.mock('express-session', () => jest.fn(() => (req, res, next) => {
+const mockExpressSession = () => (req, res, next) => {
   req.session = {};
   next();
-}));
+};
 
-jest.mock('cors', () => jest.fn(() => (req, res, next) => next()));
+const mockCors = () => (req, res, next) => next();
 
-jest.mock('passport-google-oauth20', () => ({
-  Strategy: jest.fn((options, verifyFunction) => ({
-    name: 'google',
-    authenticate: jest.fn((req, options) => {
-      const user = { id: '123', displayName: 'Test User' };
-      verifyFunction(null, null, user, null);
-    }),
-  })),
-}));
+const mockGoogleStrategy = {
+  Strategy: class {
+    constructor(options, verifyFunction) {
+      this.name = 'google';
+      this.authenticate = (req, options) => {
+        const user = { id: '123', displayName: 'Test User' };
+        verifyFunction(null, null, user, null);
+      };
+    }
+  }
+};
 
-// Define mock functions outside jest.mock()
-const mockConnect = jest.fn();
-const mockOn = jest.fn();
-const mockOnce = jest.fn();
-const mockClose = jest.fn();
-const mockModel = jest.fn();
-const mockSchema = jest.fn();
-
-// Mock mongoose
-jest.mock('mongoose', () => ({
-  connect: mockConnect,
+const mockMongoose = {
+  connect: jest.fn(),
   connection: {
-    on: mockOn,
-    once: mockOnce,
-    close: mockClose,
+    on: jest.fn(),
+    once: jest.fn(),
+    close: jest.fn()
   },
-  model: mockModel,
-  Schema: mockSchema,
-}));
+  model: jest.fn(),
+  Schema: jest.fn()
+};
+
+// Assign mock implementations
+jest.mocked(axios).mockImplementation(() => mockAxios);
+jest.mocked(passport).mockImplementation(() => mockPassport);
+jest.mocked(require('express-session')).mockImplementation(() => mockExpressSession);
+jest.mocked(require('cors')).mockImplementation(() => mockCors);
+jest.mocked(require('passport-google-oauth20')).mockImplementation(() => mockGoogleStrategy);
+jest.mocked(require('mongoose')).mockImplementation(() => mockMongoose);
 
 // Set up environment variables for testing
 process.env.FRONTEND_URL = 'http://localhost:3000';
