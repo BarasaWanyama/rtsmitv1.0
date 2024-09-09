@@ -9,8 +9,8 @@ const apiClientMock = {
   deleteItem: jest.fn()
 };
 
-jest.mock('./AppForTesting', () => ({
-  ...jest.requireActual('./AppForTesting'),
+jest.mock('./AppForTesting.js', () => ({
+  ...jest.requireActual('./AppForTesting.js'),
   apiClient: apiClientMock
 }));
 
@@ -18,7 +18,7 @@ import React from 'react';
 import { render, screen, waitFor, act, fireEvent, render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import AppForTesting, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './AppForTesting';
+import AppForTesting, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './AppForTesting.js';
 import * as tf from '@tensorflow/tfjs';
 
 const use = require('@tensorflow-models/universal-sentence-encoder');

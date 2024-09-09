@@ -38,23 +38,23 @@ export const apiClient = {
     return response.json();
   },
   // Method to get all items
-  getAllItems: () => apiClient.request('/items'),
+  getAllItems: () => apiClient.request('/items.js'),
   // Method to get a single item by ID
-  getItem: (id) => apiClient.request(`/items/${id}`),
+  getItem: (id) => apiClient.request(`/items.js/${id}`),
   // Method to create a new item
-  createItem: (name) => apiClient.request('/items', {
+  createItem: (name) => apiClient.request('/items.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
   }),
   // Method to update an existing item
-  updateItem: (id, name) => apiClient.request(`/items/${id}`, {
+  updateItem: (id, name) => apiClient.request(`/items.js/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
   }),
   // Method to delete an item
-  deleteItem: (id) => apiClient.request(`/items/${id}`, { method: 'DELETE' }),
+  deleteItem: (id) => apiClient.request(`/items.js/${id}`, { method: 'DELETE' }),
   // Implement caching for social media data
   getSocialMediaData: async () => {
     const cachedData = localStorage.getItem('socialMediaData');
