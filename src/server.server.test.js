@@ -2,29 +2,13 @@ import request from 'supertest';
 import { jest } from '@jest/globals';
 import { TextEncoder, TextDecoder } from 'util';
 
-// Mock external modules
-jest.mock('axios');
-jest.mock('passport');
-jest.mock('express-session');
-jest.mock('passport-google-oauth20');
-jest.mock('mongoose');
-
-// Manually mock cors without using jest.fn()
-jest.mock('cors', () => {
-  return function() {
-    return function(req, res, next) {
-      next();
-    };
-  };
-});
-
-// Set up mock implementations
-const mockAxios = {
+// Manual mocks for all external modules
+jest.mock('axios', () => ({
   get: jest.fn(),
   post: jest.fn()
-};
+}), { virtual: true });
 
-const mockPassport = {
+jest.mock('passport', () => ({
   initialize: jest.fn(() => (req, res, next) => next()),
   session: jest.fn(() => (req, res, next) => next()),
   authenticate: jest.fn(() => (req, res, next) => {
@@ -34,14 +18,16 @@ const mockPassport = {
   use: jest.fn(),
   serializeUser: jest.fn((user, done) => done(null, user)),
   deserializeUser: jest.fn((obj, done) => done(null, obj))
-};
+}), { virtual: true });
 
-const mockExpressSession = jest.fn(() => (req, res, next) => {
+jest.mock('express-session', () => jest.fn(() => (req, res, next) => {
   req.session = {};
   next();
-});
+}), { virtual: true });
 
-const mockGoogleStrategy = {
+jest.mock('cors', () => jest.fn(() => (req, res, next) => next()), { virtual: true });
+
+jest.mock('passport-google-oauth20', () => ({
   Strategy: jest.fn((options, verifyFunction) => ({
     name: 'google',
     authenticate: jest.fn((req, options) => {
@@ -49,9 +35,9 @@ const mockGoogleStrategy = {
       verifyFunction(null, null, user, null);
     }),
   }))
-};
+}), { virtual: true });
 
-const mockMongoose = {
+jest.mock('mongoose', () => ({
   connect: jest.fn(),
   connection: {
     on: jest.fn(),
@@ -60,14 +46,7 @@ const mockMongoose = {
   },
   model: jest.fn(),
   Schema: jest.fn()
-};
-
-// Assign mock implementations
-jest.mocked(axios).mockImplementation(() => mockAxios);
-jest.mocked(passport).mockImplementation(() => mockPassport);
-jest.mocked(require('express-session')).mockReturnValue(mockExpressSession);
-jest.mocked(require('passport-google-oauth20')).mockImplementation(() => mockGoogleStrategy);
-jest.mocked(require('mongoose')).mockImplementation(() => mockMongoose);
+}), { virtual: true });
 
 // Set up environment variables for testing
 process.env.FRONTEND_URL = 'http://localhost:3000';
