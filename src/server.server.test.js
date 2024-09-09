@@ -4,11 +4,39 @@ import { jest } from '@jest/globals';
 import { TextEncoder, TextDecoder } from 'util';
 
 // Mock external dependencies
-jest.mock('axios');
-jest.mock('passport');
-jest.mock('express-session');
-jest.mock('cors');
-jest.mock('passport-google-oauth20');
+jest.mock('axios', () => ({
+  get: jest.fn(),
+  post: jest.fn(),
+}));
+
+jest.mock('passport', () => ({
+  initialize: jest.fn(() => (req, res, next) => next()),
+  session: jest.fn(() => (req, res, next) => next()),
+  authenticate: jest.fn(() => (req, res, next) => {
+    req.user = { id: '123', displayName: 'Test User' };
+    next();
+  }),
+  use: jest.fn(),
+  serializeUser: jest.fn((user, done) => done(null, user)),
+  deserializeUser: jest.fn((obj, done) => done(null, obj)),
+}));
+
+jest.mock('express-session', () => jest.fn(() => (req, res, next) => {
+  req.session = {};
+  next();
+}));
+
+jest.mock('cors', () => jest.fn(() => (req, res, next) => next()));
+
+jest.mock('passport-google-oauth20', () => ({
+  Strategy: jest.fn((options, verifyFunction) => ({
+    name: 'google',
+    authenticate: jest.fn((req, options) => {
+      const user = { id: '123', displayName: 'Test User' };
+      verifyFunction(null, null, user, null);
+    }),
+  })),
+}));
 
 // Define mock functions outside jest.mock()
 const mockConnect = jest.fn();
