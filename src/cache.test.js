@@ -5,7 +5,7 @@ import cacheInstance from '../server/cache.js'; // Import the cache instance
 jest.mock('node-cache');
 
 describe('Cache', () => {
-  let cache;
+  let mockNodeCache;
   let mockGet, mockSet, mockDel, mockFlushAll;
 
   beforeEach(() => {
@@ -20,6 +20,7 @@ describe('Cache', () => {
       del: mockDel,
       flushAll: mockFlushAll
     }));
+    // Mock the NodeCache constructor to return our mock instance
     NodeCache.mockImplementation(() => mockNodeCache);
 
     // Reset the NodeCache mock to ensure a fresh instance for each test
@@ -63,5 +64,5 @@ describe('Cache', () => {
     const result = cacheInstance.get('nonExistentKey');
     expect(result).toBeUndefined();
   });
-  
+
 });
