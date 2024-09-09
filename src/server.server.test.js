@@ -1,99 +1,75 @@
-import axios from 'axios';
-import { TextEncoder, TextDecoder } from 'util';
 import request from 'supertest';
-import express from 'express';
-import passport from 'passport';
-import session from 'express-session';
 import mongoose from 'mongoose';
 import { jest } from '@jest/globals';
+import { TextEncoder, TextDecoder } from 'util';
 
-// Define mock functions
-const mockInitialize = () => (req, res, next) => next();
-const mockSession = () => (req, res, next) => next();
-const mockAuthenticate = () => (req, res, next) => {
-  req.user = { id: '123', displayName: 'Test User' };
-  next();
-};
-const mockUse = () => {};
-const mockSerializeUser = (user, done) => done(null, user.id);
-const mockDeserializeUser = (id, done) => done(null, { id, displayName: 'Test User' });
-
+// Mock external dependencies
 jest.mock('axios');
-jest.mock('passport', () => ({
-  initialize: mockInitialize,
-  session: mockSession,
-  authenticate: mockAuthenticate,
-  use: mockUse,
-  serializeUser: mockSerializeUser,
-  deserializeUser: mockDeserializeUser,
-}));
+jest.mock('passport');
+jest.mock('express-session');
+jest.mock('cors');
+jest.mock('passport-google-oauth20');
 
+// Mock mongoose
+const mockConnect = jest.fn();
+const mockOn = jest.fn();
+const mockOnce = jest.fn();
+const mockClose = jest.fn();
 
 jest.mock('mongoose', () => ({
-  connect: jest.fn(),
+  connect: mockConnect,
   connection: {
-    on: jest.fn(),
-    once: jest.fn(),
+    on: mockOn,
+    once: mockOnce,
+    close: mockClose,
   },
   model: jest.fn(),
   Schema: jest.fn(),
 }));
 
-jest.mock('express-session', () => {
-  return jest.fn(() => (req, res, next) => {
-    req.session = {};
-    req.session.destroy = jest.fn(callback => callback());
-    next();
-  });
-});
-
-// Mock cors
-jest.mock('cors', () => {
-  return jest.fn(() => (req, res, next) => next());
-});
-
-// Mock passport-google-oauth20
-jest.mock('passport-google-oauth20', () => {
-  return {
-    Strategy: jest.fn((options, verifyFunction) => ({
-      name: 'google',
-      authenticate: jest.fn((req, options) => {
-        const user = { id: '123', displayName: 'Test User' };
-        verifyFunction(null, null, user, null);
-      }),
-    })),
-  };
-});
+// Set up environment variables for testing
+process.env.FRONTEND_URL = 'http://localhost:3000';
+process.env.GOOGLE_CLIENT_ID = 'test_client_id';
+process.env.GOOGLE_CLIENT_SECRET = 'test_client_secret';
+process.env.SESSION_SECRET = 'test_session_secret';
+process.env.MONGODB_URI = 'mongodb://testdb/testdb';
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-// Mock environment variables
-process.env.FRONTEND_URL = 'http://localhost:3000';
-process.env.GOOGLE_CLIENT_ID = 'test_client_id';
-process.env.GOOGLE_CLIENT_SECRET = 'test_client_secret';
-
-// Import the app (assuming you've exported it from server.js)
+// Import the app after setting up mocks and environment variables
 import app from '../server/server.js';
 
-
-// Global beforeAll and afterAll
-let server;
-beforeAll((done) => {
-  server = app.listen(done);
-});
-
-afterAll((done) => {
-  mongoose.connection.close();
-  server.close(done);
-});
-
-// Clear all mocks before each test
-beforeEach(() => {
-  jest.clearAllMocks();
-});
+// Helper function for authenticated requests
+const authenticatedRequest = (request) => {
+  const authenticatedUser = { id: '123', displayName: 'Test User' };
+  return request.set('user', JSON.stringify(authenticatedUser));
+};
 
 describe('Server', () => {
+  let server;
+
+  beforeAll((done) => {
+    // Mock successful database connection
+    mockConnect.mockResolvedValue(undefined);
+    mockOn.mockImplementation((event, callback) => {
+      if (event === 'connected') {
+        callback();
+      }
+    });
+
+    server = app.listen(done);
+  });
+
+  afterAll((done) => {
+    mockClose.mockImplementation((callback) => callback());
+    server.close(done);
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('GET / should return welcome message', async () => {
     const response = await request(app).get('/');
     expect(response.status).toBe(200);
@@ -135,6 +111,25 @@ describe('Server', () => {
     
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'Logged out successfully' });
+  });
+  
+  test('GET /api/items should return items if authenticated', async () => {
+    const mockItems = [{ id: '1', name: 'Item 1' }, { id: '2', name: 'Item 2' }];
+    
+    // Mock the items route handler
+    app.get('/api/items', (req, res) => {
+      res.json(mockItems);
+    });
+
+    const response = await authenticatedRequest(request(app).get('/api/items'));
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(mockItems);
+  });
+
+  test('GET /api/items should return 401 if not authenticated', async () => {
+    const response = await request(app).get('/api/items');
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Not authenticated' });
   });
 
 });
