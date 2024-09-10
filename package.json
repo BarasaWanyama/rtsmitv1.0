@@ -69,8 +69,8 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^cors$": "<rootDir>/__mocks__/corsMock.js",
-      "^passport-google-oauth20$": "<rootDir>/__mocks__/passportGoogleOauth20Mock.js"
+      "^cors$": "<rootDir>/src/__mocks__/corsMock.js",
+      "^passport-google-oauth20$": "<rootDir>/src/__mocks__/passportGoogleOauth20Mock.js"
     }
   }
 }
