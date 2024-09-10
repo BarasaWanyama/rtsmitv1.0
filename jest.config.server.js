@@ -11,5 +11,7 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.server.js'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^axios$': '<rootDir>/node_modules/axios/dist/node/axios.cjs'
   },
+  extensionsToTreatAsEsm: ['.js']
 };
