@@ -1,9 +1,11 @@
-import axios from 'axios';
+import {jest} from '@jest/globals';
+import axios, * as others from 'axios';
 import passport from 'passport';
 import session from 'express-session';
 import cors from 'cors';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import mongoose from 'mongoose';
+
 
 jest.mock('axios');
 jest.mock('passport');
@@ -46,11 +48,17 @@ beforeAll(() => {
     }),
   }));
 
+
+  // Define mock functions for mongoose connection
+  const mockConnect = jest.fn();
+  const mockOn = jest.fn();
+  const mockClose = jest.fn();
+
   // Mock mongoose
   mongoose.connect.mockImplementation(() => Promise.resolve());
-  mongoose.connection.on.mockImplementation(() => mongoose.connection);
-  mongoose.connection.once.mockImplementation(() => mongoose.connection);
-  mongoose.connection.close.mockImplementation(() => Promise.resolve());
+  mongoose.connect.mockImplementation(mockConnect);
+  mongoose.connection.on.mockImplementation(mockOn);
+  mongoose.connection.close.mockImplementation(mockClose);
   mongoose.model.mockImplementation(() => ({}));
   mongoose.Schema.mockImplementation(() => ({}));
 });

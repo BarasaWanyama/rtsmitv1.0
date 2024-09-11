@@ -8,6 +8,7 @@
     "@tensorflow/tfjs": "^4.20.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
+    "cors": "^2.8.5",
     "debug": "^4.3.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -32,8 +33,9 @@
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "test": "react-scripts test",
-    "test:server": "NODE_OPTIONS=--experimental-vm-modules jest --config=jest.config.server.js"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:client": "NODE_OPTIONS='--experimental-vm-modules' jest --selectProjects=client",
+    "test:server": "NODE_OPTIONS='--experimental-vm-modules' jest --config=jest.config.js --selectProjects=server --detectOpenHandles --forceExit"
   },
   "eslintConfig": {
     "extends": [
@@ -63,14 +65,21 @@
     "babel-jest": "^29.7.0",
     "concurrently": "^8.2.2",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^27.5.1",
+    "jest": "^29.7.0",
     "mongodb-memory-server": "^10.0.0",
     "supertest": "^7.0.0"
   },
   "jest": {
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!axios)/"
+    ],
     "moduleNameMapper": {
-      "^cors$": "<rootDir>/src/__mocks__/corsMock.js",
-      "^passport-google-oauth20$": "<rootDir>/src/__mocks__/passportGoogleOauth20Mock.js"
-    }
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.server.js"]
   }
 }
