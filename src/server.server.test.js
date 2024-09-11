@@ -1,3 +1,12 @@
+import { TextEncoder, TextDecoder } from 'util';
+
+if (typeof global !== 'undefined') {
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+} else if (typeof window !== 'undefined') {
+  window.TextEncoder = TextEncoder;
+  window.TextDecoder = TextDecoder;
+}
 import {jest} from '@jest/globals';
 import axios from 'axios';
 import passport from 'passport';
