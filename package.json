@@ -72,7 +72,8 @@
   "jest": {
     "moduleNameMapper": {
       "cors": "<rootDir>/src/__mocks__/corsMock.js",
-      "passport-google-oauth20": "<rootDir>/src/__mocks__/passportGoogleOauth20Mock.js"
+      "passport-google-oauth20": "<rootDir>/src/__mocks__/passportGoogleOauth20Mock.js",
+      "^axios$": "axios/dist/node/axios.cjs"
     }
   }
 }
