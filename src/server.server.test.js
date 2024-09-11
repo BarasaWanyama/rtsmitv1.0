@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import axios, * as others from 'axios';
+import axios from 'axios';
 import passport from 'passport';
 import session from 'express-session';
 import cors from 'cors';
