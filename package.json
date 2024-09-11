@@ -76,6 +76,6 @@
       "^axios$": "axios/dist/node/axios.cjs"
     },
     "testEnvironment": "node"
-    }
+  }
 }
 
