@@ -33,7 +33,7 @@
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js",
+    "test": "react-scripts test",
     "test:client": "NODE_OPTIONS='--experimental-vm-modules' jest --selectProjects=client",
     "test:server": "NODE_OPTIONS='--experimental-vm-modules' jest --config=jest.config.js --selectProjects=server --detectOpenHandles --forceExit"
   },
@@ -68,5 +68,11 @@
     "jest": "^29.7.0",
     "mongodb-memory-server": "^10.0.0",
     "supertest": "^7.0.0"
-  } 
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "cors": "<rootDir>/src/__mocks__/corsMock.js",
+      "passport-google-oauth20": "<rootDir>/src/__mocks__/passportGoogleOauth20Mock.js"
+    }
+  }
 }
