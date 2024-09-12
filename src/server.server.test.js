@@ -1,7 +1,6 @@
 import { TextEncoder, TextDecoder } from 'util';
 
-global.TextEncoder = global.TextEncoder || TextEncoder;
-global.TextDecoder = global.TextDecoder || TextDecoder;
+Object.assign(global, { TextDecoder, TextEncoder });
 
 import {jest} from '@jest/globals';
 import axios from 'axios';
