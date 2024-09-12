@@ -1,5 +1,5 @@
 // Mock API client
-const apiClientMock = {
+const mockApiClient = {
   request: jest.fn(),
   getSocialMediaData: jest.fn(),
   getAllItems: jest.fn(),
@@ -13,7 +13,7 @@ jest.mock('./AppForTesting.js', () => {
   const originalModule = jest.requireActual('./AppForTesting.js');
   return {
     ...originalModule,
-    apiClient: apiClientMock
+    apiClient: mockApiClient
   };
 });
 
@@ -73,13 +73,13 @@ Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 // Clear all mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();
-  apiClientMock.request.mockResolvedValue({ /* mock data */ });
-  apiClientMock.getSocialMediaData.mockResolvedValue([/* mock social media data */]);
+  mockApiClient.request.mockResolvedValue({ /* mock data */ });
+  mockApiClient.getSocialMediaData.mockResolvedValue([/* mock social media data */]);
 });
 
   describe('App Component', () => {
     test('renders without crashing', async () => {
-      apiClientMock.request.mockResolvedValueOnce(null); // Mock no user for initial load
+      mockApiClient.request.mockResolvedValueOnce(null); // Mock no user for initial load
     
       await act(async () => {
         customRender(<AppForTesting />);
@@ -89,7 +89,7 @@ beforeEach(() => {
     });
 
     test('displays login page when user is not authenticated', async () => {
-      apiClientMock.request.mockResolvedValueOnce(null); // Mock no user
+      mockApiClient.request.mockResolvedValueOnce(null); // Mock no user
   
       await act(async () => {
         customRender(<AppForTesting />);
@@ -101,8 +101,8 @@ beforeEach(() => {
     });
 
     test('displays dashboard when user is authenticated', async () => {
-      apiClientMock.request.mockResolvedValueOnce({ displayName: 'Test User' });
-      apiClientMock.getSocialMediaData.mockResolvedValueOnce([]);
+      mockApiClient.request.mockResolvedValueOnce({ displayName: 'Test User' });
+      mockApiClient.getSocialMediaData.mockResolvedValueOnce([]);
     
       await act(async () => {
         customRender(<AppForTesting />);
@@ -114,10 +114,10 @@ beforeEach(() => {
     });
     
     test('handles logout correctly', async () => {
-      apiClientMock.request
+      mockApiClient.request
         .mockResolvedValueOnce({ displayName: 'Test User' })
         .mockResolvedValueOnce({ message: 'Logged out successfully' });
-      apiClientMock.getSocialMediaData.mockResolvedValueOnce([]);
+      mockApiClient.getSocialMediaData.mockResolvedValueOnce([]);
     
       await act(async () => {
         customRender(<AppForTesting />);
