@@ -9,19 +9,23 @@ const apiClientMock = {
   deleteItem: jest.fn()
 };
 
-jest.mock('./AppForTesting.js', () => ({
-  ...jest.requireActual('./AppForTesting.js'),
-  apiClient: apiClientMock
-}));
+jest.mock('./AppForTesting.js', () => {
+  const originalModule = jest.requireActual('./AppForTesting.js');
+  return {
+    ...originalModule,
+    apiClient: apiClientMock
+  };
+});
 
 import React from 'react';
+import { apiClient } from './AppForTesting.js';
 import { render, screen, waitFor, act, fireEvent, render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import AppForTesting, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout, apiClient } from './AppForTesting.js';
+import AppForTesting, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout } from './AppForTesting.js';
 import * as tf from '@tensorflow/tfjs';
+import * as use from '@tensorflow-models/universal-sentence-encoder';
 
-const use = require('@tensorflow-models/universal-sentence-encoder');
 
 // Helper function for rendering with Router
 function customRender(ui, { route = '/' } = {}) {
