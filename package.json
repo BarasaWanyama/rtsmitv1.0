@@ -25,6 +25,7 @@
     "react-scripts": "^5.0.1",
     "recharts": "^2.12.7",
     "semver": "^7.6.3",
+    "undici": "^6.19.8",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -77,4 +78,3 @@
     }
   }
 }
-

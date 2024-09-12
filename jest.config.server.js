@@ -15,14 +15,13 @@ export default {
       testMatch: ['<rootDir>/src/**/*.server.test.js'],
       moduleFileExtensions: ['js', 'json', 'node'],
       transform: {'^.+\\.js$': 'babel-jest',},
-      transformIgnorePatterns: [
-        '/node_modules/(?!axios)/'
-      ],
+      transformIgnorePatterns: ['/node_modules/(?!axios)/'],
       setupFilesAfterEnv: ['<rootDir>/jest.setup.server.js'],
       moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
         '^axios$': '<rootDir>/node_modules/axios/dist/node/axios.cjs'
-      }
+      },
+      setupFiles: ['./jest.polyfills.js']
     }
   ]
-};
+}
