@@ -1,3 +1,4 @@
+
 // Mock API client
 const mockApiClient = {
   request: jest.fn(),
@@ -9,13 +10,11 @@ const mockApiClient = {
   deleteItem: jest.fn()
 };
 
-jest.mock('./AppForTesting.js', () => {
-  const originalModule = jest.requireActual('./AppForTesting.js');
-  return {
-    ...originalModule,
-    apiClient: mockApiClient
-  };
-});
+jest.mock('./AppForTesting.js', () => ({
+  __esModule: true,
+  ...jest.requireActual('./AppForTesting.js'),
+  apiClient: mockApiClient
+}));
 
 import React from 'react';
 import { apiClient } from './AppForTesting.js';
