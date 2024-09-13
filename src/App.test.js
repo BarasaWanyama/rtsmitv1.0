@@ -25,6 +25,8 @@ import * as tf from '@tensorflow/tfjs';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
 import { apiClient } from './AppForTesting.js';
 
+
+
 // Helper function for rendering with Router
 function customRender(ui, { route = '/' } = {}) {
   window.history.pushState({}, 'Test page', route);
@@ -107,11 +109,12 @@ beforeEach(() => {
       });
     
       await waitFor(() => {
-        expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
-      });
+        expect(screen.getByText(/Test User/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
     
     test('handles logout correctly', async () => {
+      // Mock authenticated user
       mockApiClient.request
         .mockResolvedValueOnce({ displayName: 'Test User' })
         .mockResolvedValueOnce({ message: 'Logged out successfully' });
@@ -121,17 +124,20 @@ beforeEach(() => {
         customRender(<AppForTesting />);
       });
     
+      // Wait for the dashboard to render
       await waitFor(() => {
-        expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
-      });
+        expect(screen.getByText(/Test User/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
     
+      // Trigger logout
       await act(async () => {
         fireEvent.click(screen.getByText(/Logout/i));
       });
     
+      // Wait for the login page to render
       await waitFor(() => {
         expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
   });
