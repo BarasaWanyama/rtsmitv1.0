@@ -17,14 +17,13 @@ jest.doMock('./AppForTesting.js', () => ({
 }));
 
 import React from 'react';
-import { apiClient } from './AppForTesting.js';
 import { render, screen, waitFor, act, fireEvent, render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import AppForTesting, { loadModel, analyzeSentiment, fetchSocialMediaData, getFilteredAndSortedData, handleFilterChange, handleSortChange, handleCustomTextAnalysis, addAlert, removeAlert, handleGoogleLogin, checkAuth, handleLogout } from './AppForTesting.js';
 import * as tf from '@tensorflow/tfjs';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
-
+import { apiClient } from './AppForTesting.js';
 
 // Helper function for rendering with Router
 function customRender(ui, { route = '/' } = {}) {
@@ -145,6 +144,8 @@ beforeEach(() => {
       setModel = jest.fn();
       setError = jest.fn();
       jest.clearAllMocks();
+      mockApiClient.request.mockReset();
+      mockApiClient.getSocialMediaData.mockReset();
     });
   
     test('should load model successfully', async () => {
@@ -406,6 +407,9 @@ describe('getFilteredAndSortedData function', () => {
   beforeEach(() => {
     jest.useFakeTimers('modern');
     jest.setSystemTime(new Date('2023-08-30T00:00:00Z'));
+    jest.clearAllMocks();
+    mockApiClient.request.mockReset();
+    mockApiClient.getSocialMediaData.mockReset();
   });
 
   afterEach(() => {
@@ -594,6 +598,9 @@ describe('handleCustomTextAnalysis function', () => {
     // Mock document.getElementById
     originalGetElementById = document.getElementById;
     document.getElementById = jest.fn();
+    jest.clearAllMocks();
+    mockApiClient.request.mockReset();
+    mockApiClient.getSocialMediaData.mockReset();
   });
 
   afterEach(() => {
@@ -956,6 +963,9 @@ describe('handleLogout function', () => {
 
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.clearAllMocks();
+    mockApiClient.request.mockReset();
+    mockApiClient.getSocialMediaData.mockReset();
   });
 
   afterEach(() => {
@@ -965,13 +975,13 @@ describe('handleLogout function', () => {
   });
 
   test('should handle successful logout', async () => {
-    apiClient.request.mockResolvedValue({ message: 'Logged out successfully' });
+    mockApiClient.request.mockResolvedValue({ message: 'Logged out successfully' });
     const mockSetUser = jest.fn();
     const mockSetError = jest.fn();
 
-    await handleLogout(apiClient, mockSetUser, mockSetError);
+    await handleLogout(mockApiClient, mockSetUser, mockSetError);
 
-    expect(apiClient.request).toHaveBeenCalledWith('/auth/logout', expect.any(Object));
+    expect(mockApiClient.request).toHaveBeenCalledWith('/auth/logout', expect.any(Object));
     expect(mockSetUser).toHaveBeenCalledWith(null);
     expect(window.localStorage.removeItem).toHaveBeenCalledWith('user');
     expect(window.location.href).toBe('/login');
@@ -979,13 +989,13 @@ describe('handleLogout function', () => {
 
   test('should handle failed logout response', async () => {
     const mockResponse = { message: 'Logout failed' };
-    apiClient.request.mockResolvedValue(mockResponse);
+    mockApiClient.request.mockResolvedValue(mockResponse);
     const mockSetUser = jest.fn();
     const mockSetError = jest.fn();
 
-    await handleLogout(apiClient, mockSetUser, mockSetError);
+    await handleLogout(mockApiClient, mockSetUser, mockSetError);
 
-    expect(apiClient.request).toHaveBeenCalledWith('/auth/logout', {
+    expect(mockApiClient.request).toHaveBeenCalledWith('/auth/logout', {
       method: 'POST',
       credentials: 'include'
     });
@@ -999,13 +1009,13 @@ describe('handleLogout function', () => {
 
   test('should handle network error during logout', async () => {
     const mockError = new Error('Network error');
-    apiClient.request.mockRejectedValue(mockError);
+    mockApiClient.request.mockRejectedValue(mockError);
     const mockSetUser = jest.fn();
     const mockSetError = jest.fn();
 
-    await handleLogout(apiClient, mockSetUser, mockSetError);
+    await handleLogout(mockApiClient, mockSetUser, mockSetError);
 
-    expect(apiClient.request).toHaveBeenCalledWith('/auth/logout', {
+    expect(mockApiClient.request).toHaveBeenCalledWith('/auth/logout', {
       method: 'POST',
       credentials: 'include'
     });
@@ -1021,14 +1031,14 @@ describe('apiClient', () => {
   
   beforeEach(() => {
     jest.clearAllMocks();
-    apiClient.request.mockReset();
-    apiClient.getSocialMediaData.mockReset();
+    mockApiClient.request.mockReset();
+    mockApiClient.getSocialMediaData.mockReset();
   });
 
   test('should make a successful request', async () => {
     const mockResponse = { data: 'test' };
     apiClientMock.request.mockResolvedValueOnce(mockResponse);
-    const result = await apiClient.request('/test');
+    const result = await mockApiClient.request('/test');
     expect(result).toEqual(mockResponse);
   });
 
@@ -1037,24 +1047,24 @@ describe('apiClient', () => {
       ok: false,
       statusText: 'Not Found'
     });
-    await expect(apiClient.request('/test')).rejects.toThrow('API request failed: Not Found');
+    await expect(mockApiClient.request('/test')).rejects.toThrow('API request failed: Not Found');
   });
 
   test('should call request with correct endpoint', async () => {
-    const spy = jest.spyOn(apiClient, 'request');
-    await apiClient.getAllItems();
+    const spy = jest.spyOn(mockApiClient, 'request');
+    await mockApiClient.getAllItems();
     expect(spy).toHaveBeenCalledWith('/items');
   });
 
   test('should call request with correct endpoint and ID', async () => {
-    const spy = jest.spyOn(apiClient, 'request');
-    await apiClient.getItem(1);
+    const spy = jest.spyOn(mockApiClient, 'request');
+    await mockApiClient.getItem(1);
     expect(spy).toHaveBeenCalledWith('/items/1');
   });
 
   test('should call request with correct endpoint and data', async () => {
-    const spy = jest.spyOn(apiClient, 'request');
-    await apiClient.createItem('New Item');
+    const spy = jest.spyOn(mockApiClient, 'request');
+    await mockApiClient.createItem('New Item');
     expect(spy).toHaveBeenCalledWith('/items', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1063,8 +1073,8 @@ describe('apiClient', () => {
   });
 
   test('should call request with correct endpoint, ID, and data', async () => {
-    const spy = jest.spyOn(apiClient, 'request');
-    await apiClient.updateItem(1, 'Updated Item');
+    const spy = jest.spyOn(mockApiClient, 'request');
+    await mockApiClient.updateItem(1, 'Updated Item');
     expect(spy).toHaveBeenCalledWith('/items/1', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -1073,8 +1083,8 @@ describe('apiClient', () => {
   });
 
   test('should call request with correct endpoint and ID', async () => {
-    const spy = jest.spyOn(apiClient, 'request');
-    await apiClient.deleteItem(1);
+    const spy = jest.spyOn(mockApiClient, 'request');
+    await mockApiClient.deleteItem(1);
     expect(spy).toHaveBeenCalledWith('/items/1', { method: 'DELETE' });
   });
 });
@@ -1087,7 +1097,7 @@ describe('getSocialMediaData', () => {
       if (key === 'socialMediaData') return JSON.stringify(cachedData);
       if (key === 'socialMediaDataTime') return (Date.now() - 30000).toString();
     });
-    const result = await apiClient.getSocialMediaData();
+    const result = await mockApiClient.getSocialMediaData();
     expect(result).toEqual(cachedData);
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -1104,7 +1114,7 @@ describe('getSocialMediaData', () => {
       json: () => Promise.resolve(newData)
     });
 
-    const result = await apiClient.getSocialMediaData();
+    const result = await mockApiClient.getSocialMediaData();
     expect(result).toEqual(expect.objectContaining(newData));
     expect(fetch).toHaveBeenCalled();
     expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
@@ -1118,7 +1128,7 @@ describe('getSocialMediaData', () => {
       json: () => Promise.resolve(newData)
     });
 
-    const result = await apiClient.getSocialMediaData();
+    const result = await mockApiClient.getSocialMediaData();
     expect(result).toEqual(newData);
     expect(fetch).toHaveBeenCalled();
     expect(localStorage.setItem).toHaveBeenCalledWith('socialMediaData', JSON.stringify(newData));
@@ -1128,7 +1138,7 @@ describe('getSocialMediaData', () => {
     localStorage.getItem.mockReturnValue(null);
     fetch.mockRejectedValueOnce(new Error('Network error'));
 
-    await expect(apiClient.getSocialMediaData()).rejects.toThrow('Network error');
+    await expect(mockApiClient.getSocialMediaData()).rejects.toThrow('Network error');
   });
   // Add more tests here as needed
 });
