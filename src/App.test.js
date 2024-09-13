@@ -10,7 +10,7 @@ const mockApiClient = {
   deleteItem: jest.fn()
 };
 
-jest.mock('./AppForTesting.js', () => ({
+jest.doMock('./AppForTesting.js', () => ({
   __esModule: true,
   ...jest.requireActual('./AppForTesting.js'),
   apiClient: mockApiClient
