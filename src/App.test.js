@@ -368,24 +368,29 @@ describe('fetchSocialMediaData function', () => {
   
     await fetchSocialMediaData(
       mockApiClient,
-      {}, // mock model
+      mockModel,
       mockAnalyzeSentiment,
       mockSetSocialMediaData,
       mockSetSentimentData,
       mockSetError,
       mockSetLoading
     );
-  
+    // Verify mockSetSocialMediaData is called correctly
     expect(mockSetSocialMediaData).toHaveBeenCalledWith([
       { id: 1, text: 'Great post!' },
       { id: 2, text: 'Terrible experience.' },
       { id: 3, text: 'Neutral statement.' }
     ]);
+    // Verify mockSetSentimentData is called correctly
     expect(mockSetSentimentData).toHaveBeenCalledWith([
       { id: 1, text: 'Great post!', sentiment: { score: 0.8, label: 'Positive' } },
       { id: 2, text: 'Terrible experience.', sentiment: null },
       { id: 3, text: 'Neutral statement.', sentiment: { score: 0, label: 'Neutral' } }
     ]);
+    // Optionally, verify that mockSetError and mockSetLoading were called appropriately
+    expect(mockSetError).not.toHaveBeenCalled();
+    expect(mockSetLoading).toHaveBeenCalledWith(true);
+    expect(mockSetLoading).toHaveBeenCalledWith(false);
   });
 });
 
