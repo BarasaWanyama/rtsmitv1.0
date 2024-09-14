@@ -140,40 +140,85 @@ beforeEach(() => {
     });
     
     test('handles logout correctly', async () => {
-      // Mock the initial user state
       const mockUser = { displayName: 'Test User' };
-      jest.spyOn(React, 'useState').mockImplementationOnce(() => [mockUser, jest.fn()]);
-
-      // Mock the API client response for logout
-      apiClient.request.mockResolvedValueOnce({ message: 'Logged out successfully' });
-
-      // Mock window.location.href
+      let userStateSetter;
+    
+      // Mock useState
+      const mockUseState = jest.fn().mockImplementation((initialState) => {
+        const state = { current: initialState };
+        const setState = (newState) => {
+          state.current = typeof newState === 'function' ? newState(state.current) : newState;
+          if (userStateSetter) userStateSetter(state.current);
+        };
+        return [state.current, setState];
+      });
+      jest.spyOn(React, 'useState').mockImplementation(mockUseState);
+    
+      // Mock apiClient requests
+      mockApiClient.request.mockImplementation((url, options) => {
+        if (url === '/auth/user') {
+          return Promise.resolve(mockUser);
+        }
+        if (url === '/auth/logout') {
+          return Promise.resolve({ message: 'Logged out successfully' });
+        }
+        return Promise.reject(new Error('Unexpected request'));
+      });
+    
+      // Mock window.location
+      const originalLocation = window.location;
       delete window.location;
       window.location = { href: '' };
-
-      customRender(<AppForTesting />);
-
-      // Wait for the dashboard to render with the user's name
-      await waitFor(() => {
-        expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
-      },    { timeout: 3000 });
-      
-      // Find and click the logout button
-      const logoutButton = screen.getByText(/Logout/i);
+    
+      // Render the component
+      let renderResult;
       await act(async () => {
-        fireEvent.click(logoutButton);
+        renderResult = customRender(<AppForTesting />);
       });
-
-      // Wait for the logout process to complete
+    
+      // Debug: Log the current state of the DOM
+      console.log('Initial render:', renderResult.container.innerHTML);
+    
+      // Wait for the authentication check to complete
       await waitFor(() => {
-        expect(window.location.href).toBe('/login');
+        expect(screen.getByTestId('auth-state')).toHaveTextContent('checked');
       });
-
-      // Verify that the API client's request method was called for logout
-      expect(apiClient.request).toHaveBeenCalledWith('/auth/logout', {
+    
+      // Debug: Log the current state of the DOM again
+      console.log('After auth check:', renderResult.container.innerHTML);
+    
+      // Wait for the welcome message to appear
+      await waitFor(() => {
+        const welcomeMessage = screen.queryByText(/Welcome, Test User!/i);
+        if (!welcomeMessage) {
+          throw new Error('Welcome message not found. Current DOM: ' + renderResult.container.innerHTML);
+        }
+        expect(welcomeMessage).toBeInTheDocument();
+      }, { timeout: 5000 });
+    
+      // Find and click the logout button
+      const logoutButton = await screen.findByText(/Logout/i);
+      await act(async () => {
+        userEvent.click(logoutButton);
+      });
+    
+      // Wait for the login page to appear
+      await waitFor(() => {
+        expect(screen.queryByText(/Welcome, Test User!/i)).not.toBeInTheDocument();
+        expect(screen.getByText(/Login/i)).toBeInTheDocument();
+      });
+    
+      // Check if the logout request was made
+      expect(mockApiClient.request).toHaveBeenCalledWith('/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });
+    
+      // Check if the location was updated
+      expect(window.location.href).toBe('/login');
+    
+      // Restore window.location
+      window.location = originalLocation;
     });
   });
 
