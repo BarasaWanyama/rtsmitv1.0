@@ -140,32 +140,41 @@ beforeEach(() => {
     });
     
     test('handles logout correctly', async () => {
-      // Mock authenticated user
-      mockApiClient.request
-        .mockResolvedValueOnce({ displayName: 'Test User' })
-        .mockResolvedValueOnce({ message: 'Logged out successfully' });
-      mockApiClient.getSocialMediaData.mockResolvedValueOnce([]);
-    
-      await act(async () => {
-        customRender(<AppForTesting />);
-      });
-    
-      // Wait for the dashboard to render
-      await waitFor(() => {
-        expect(screen.getByText(/Test User/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
-    
-      // Trigger logout
-      await act(async () => {
-        fireEvent.click(screen.getByText(/Logout/i));
-      });
-    
-      // Wait for the login page to render
-      await waitFor(() => {
-        expect(screen.getByText(/Login with Google/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
-    });
+      // Mock the initial user state
+      const mockUser = { displayName: 'Test User' };
+      jest.spyOn(React, 'useState').mockImplementationOnce(() => [mockUser, jest.fn()]);
 
+      // Mock the API client response for logout
+      apiClient.request.mockResolvedValueOnce({ message: 'Logged out successfully' });
+
+      // Mock window.location.href
+      delete window.location;
+      window.location = { href: '' };
+
+      customRender(<AppForTesting />);
+
+      // Wait for the dashboard to render with the user's name
+      await waitFor(() => {
+        expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
+      },    { timeout: 3000 });
+      
+      // Find and click the logout button
+      const logoutButton = screen.getByText(/Logout/i);
+      await act(async () => {
+        fireEvent.click(logoutButton);
+      });
+
+      // Wait for the logout process to complete
+      await waitFor(() => {
+        expect(window.location.href).toBe('/login');
+      });
+
+      // Verify that the API client's request method was called for logout
+      expect(apiClient.request).toHaveBeenCalledWith('/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    });
   });
 
   describe('loadModel function', () => {
