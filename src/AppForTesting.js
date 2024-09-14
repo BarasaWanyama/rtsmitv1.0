@@ -294,9 +294,14 @@ function AppForTesting() {
     return () => clearInterval(intervalId);
   }, [fetchData]);
 
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   // Check user authentication on component mount
   useEffect(() => {
-    checkAuth(apiClient, setUser);
+    const checkAuthentication = async () => {
+      await checkAuth(apiClient, setUser);
+      setIsAuthChecked(true);
+    };
+    checkAuthentication();
   }, []);
 
   //Filter and sort socialmedia data
@@ -361,6 +366,7 @@ function AppForTesting() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
         <div className="App">
+        <div data-testid="auth-state" style={{display: 'none'}}>{isAuthChecked ? 'checked' : 'unchecked'}</div>
           <p>App is rendering</p>
           <h1>Real-Time Social Media Impact Tracker </h1>
           {loading && <p>Loading...</p>}
